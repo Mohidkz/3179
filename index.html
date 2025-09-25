@@ -1,12 +1,98 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Html proj</title>
+  <meta charset="utf-8" />
+  <title>Public Transport Commuting — Australia (ABS 2021)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <style>
+    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
+    #vis { max-width: 1000px; }
+  </style>
 </head>
 <body>
-    <h1>heading</h1>
-    <p>para</p>
+  <div id="vis"></div>
+
+  <script>
+  const spec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Share of employed commuters using public transport (ABS Census 2021), by Australian state/territory.",
+    "width": 900,
+    "height": 560,
+
+    "title": {
+      "text": "Public Transport Commuting — Australia (ABS 2021)",
+      "subtitle": "Share of employed commuters using train, bus, ferry or tram/light rail. Source: ABS Census 2021 (MTWP).",
+      "anchor": "start"
+    },
+
+    "projection": {
+    "type": "mercator",
+    "center": [134, -28],
+    "scale": 780
+    },
+
+    "layer": [
+      {
+        "data": { "graticule": { "step": [20, 20] } },
+        "mark": { "type": "geoshape", "stroke": "#d8e0e7", "strokeWidth": 0.6 }
+      },
+
+      {
+        "data": {
+          "url": "data/au-states.json",
+          "format": { "type": "topojson", "feature": "states" }
+        },
+        "transform": [
+          {
+            "filter": {
+              "field": "properties.name",
+              "oneOf": [
+                "New South Wales","Victoria","Queensland","South Australia",
+                "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
+              ]
+            }
+          },
+          {
+            "lookup": "properties.name",
+            "from": {
+              "data": { "url": "data/au-pt-commuting-2021.csv" },
+              "key": "state_name",
+              "fields": ["pct_pt","pt_commuters","total_commuters"]
+            }
+          },
+          /* make sure color has a value even if the join fails */
+          { "calculate": "isValid(datum.pct_pt) ? datum.pct_pt : 0", "as": "pct_safe" }
+        ],
+        "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 0.9 },
+        "encoding": {
+          "color": {
+            "field": "pct_safe",
+            "type": "quantitative",
+            "title": "% commuters using public transport",
+            "scale": { "scheme": "blues" }
+          },
+          "tooltip": [
+            { "field": "properties.name", "title": "State/Territory" },
+            { "field": "pt_commuters", "title": "PT commuters" },
+            { "field": "total_commuters", "title": "Total commuters" },
+            { "field": "pct_pt", "title": "% PT (raw)", "format": ".1f" }
+          ]
+        }
+      }
+    ],
+
+    "config": {
+      "view": { "stroke": null },
+      "legend": { "titleFontSize": 12, "labelFontSize": 11, "titleLimit": 320 }
+    }
+  };
+
+  vegaEmbed("#vis", spec, { actions: false })
+    .then(() => console.log("Map with data rendered"))
+    .catch(err => console.error("Vega error:", err));
+  </script>
 </body>
 </html>
