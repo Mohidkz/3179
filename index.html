@@ -9,11 +9,13 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
     body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    #vis { max-width: 1000px; }
+    #vis { max-width: 1000px; margin-bottom: 10px; }
+    .footer { font-size: 13px; color: #555; margin-top: 6px; }
   </style>
 </head>
 <body>
   <div id="vis"></div>
+  <div class="footer">Source: ABS Census 2021 (Method of Travel to Work, 2021)</div>
 
   <script>
   const spec = {
@@ -24,61 +26,39 @@
 
     "title": {
       "text": "Public Transport Commuting — Australia (ABS 2021)",
-      "subtitle": "Share of employed commuters using train, bus, ferry or tram/light rail. Source: ABS Census 2021 (MTWP).",
+      "subtitle": "Share of employed commuters using train, bus, ferry or tram/light rail.",
       "anchor": "start"
     },
 
-    "projection": {
-    "type": "mercator",
-    "center": [134, -28],
-    "scale": 780
-    },
+    "projection": { "type": "mercator", "center": [134, -28], "scale": 780 },
 
     "layer": [
-      {
-        "data": { "graticule": { "step": [20, 20] } },
-        "mark": { "type": "geoshape", "stroke": "#d8e0e7", "strokeWidth": 0.6 }
-      },
+      { "data": { "graticule": "sphere" },
+        "mark": { "type": "geoshape", "fill": "#eef6fb" } },
 
-      {
-        "data": {
-          "url": "data/au-states.json",
-          "format": { "type": "topojson", "feature": "states" }
-        },
+      { "data": { "graticule": { "step": [30, 30] } },
+        "mark": { "type": "geoshape", "stroke": "#dbe3ea", "strokeWidth": 0.6 } },
+
+      { "data": { "url": "data/au-states.json", "format": { "type": "topojson", "feature": "states" } },
         "transform": [
-          {
-            "filter": {
-              "field": "properties.name",
-              "oneOf": [
-                "New South Wales","Victoria","Queensland","South Australia",
-                "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
-              ]
-            }
-          },
-          {
-            "lookup": "properties.name",
-            "from": {
-              "data": { "url": "data/au-pt-commuting-2021.csv" },
-              "key": "state_name",
-              "fields": ["pct_pt","pt_commuters","total_commuters"]
-            }
-          },
-          /* make sure color has a value even if the join fails */
+          { "filter": { "field": "properties.name",
+            "oneOf": ["New South Wales","Victoria","Queensland","South Australia","Western Australia","Tasmania","Northern Territory","Australian Capital Territory"] } },
+          { "lookup": "properties.name",
+            "from": { "data": { "url": "data/au-pt-commuting-2021.csv" },
+                      "key": "state_name",
+                      "fields": ["pct_pt","pt_commuters","total_commuters"] } },
           { "calculate": "isValid(datum.pct_pt) ? datum.pct_pt : 0", "as": "pct_safe" }
         ],
         "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 0.9 },
         "encoding": {
-          "color": {
-            "field": "pct_safe",
-            "type": "quantitative",
-            "title": "% commuters using public transport",
-            "scale": { "scheme": "blues" }
-          },
+          "color": { "field": "pct_safe", "type": "quantitative",
+                     "title": "% commuters using public transport",
+                     "scale": { "scheme": "blues" } },
           "tooltip": [
             { "field": "properties.name", "title": "State/Territory" },
             { "field": "pt_commuters", "title": "PT commuters" },
             { "field": "total_commuters", "title": "Total commuters" },
-            { "field": "pct_pt", "title": "% PT (raw)", "format": ".1f" }
+            { "field": "pct_pt", "title": "% PT", "format": ".1f" }
           ]
         }
       }
@@ -91,7 +71,7 @@
   };
 
   vegaEmbed("#vis", spec, { actions: false })
-    .then(() => console.log("Map with data rendered"))
+    .then(() => console.log("Final map rendered"))
     .catch(err => console.error("Vega error:", err));
   </script>
 </body>
