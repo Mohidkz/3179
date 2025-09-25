@@ -8,71 +8,98 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    #vis { max-width: 1000px; margin-bottom: 10px; }
-    .footer { font-size: 13px; color: #555; margin-top: 6px; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      display: flex; flex-direction: column;
+    }
+    #vis { width: 100%; height: calc(100vh - 44px); min-height: 380px; }
+    .footer { font-size: 13px; color: #555; padding: 8px 12px; }
   </style>
 </head>
 <body>
-  <div id="vis"></div>
-  <div class="footer">Source: ABS Census 2021 (Method of Travel to Work, 2021)</div>
+  <div id="vis" aria-label="Choropleth map of public transport commuting in Australia"></div>
+  <div class="footer">
+    Source: ABS Census 2021 (Method of Travel to Work, MTWP). Geography: Natural Earth Admin-1.
+  </div>
 
   <script>
-  const spec = {
-    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "description": "Share of employed commuters using public transport (ABS Census 2021), by Australian state/territory.",
-    "width": 900,
-    "height": 560,
+    const topoUrl = "data/au-states.json";
+    const csvUrl  = "data/au-pt-commuting-2021.csv";
 
-    "title": {
-      "text": "Public Transport Commuting — Australia (ABS 2021)",
-      "subtitle": "Share of employed commuters using train, bus, ferry or tram/light rail.",
-      "anchor": "start"
-    },
+    const spec = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "Share of employed commuters using public transport (ABS Census 2021), by Australian state/territory.",
 
-    "projection": { "type": "mercator", "center": [134, -28], "scale": 780 },
+      "width": "container",
+      "height": "container",
+      "autosize": { "type": "fit", "contains": "padding", "resize": true },
 
-    "layer": [
-      { "data": { "graticule": "sphere" },
-        "mark": { "type": "geoshape", "fill": "#eef6fb" } },
+      "title": {
+        "text": "Where do Australians Use Public Transport to Get to Work?",
+        "subtitle": "Share of employed commuters by state/territory, ABS Census 2021 (MTWP)",
+        "anchor": "start",
+        "fontSize": 18,
+        "subtitleFontSize": 13,
+        "subtitleColor": "#555"
+      },
 
-      { "data": { "graticule": { "step": [30, 30] } },
-        "mark": { "type": "geoshape", "stroke": "#dbe3ea", "strokeWidth": 0.6 } },
+      "projection": { "type": "mercator", "center": [134, -28], "scale": 780 },
 
-      { "data": { "url": "data/au-states.json", "format": { "type": "topojson", "feature": "states" } },
-        "transform": [
-          { "filter": { "field": "properties.name",
-            "oneOf": ["New South Wales","Victoria","Queensland","South Australia","Western Australia","Tasmania","Northern Territory","Australian Capital Territory"] } },
-          { "lookup": "properties.name",
-            "from": { "data": { "url": "data/au-pt-commuting-2021.csv" },
-                      "key": "state_name",
-                      "fields": ["pct_pt","pt_commuters","total_commuters"] } },
-          { "calculate": "isValid(datum.pct_pt) ? datum.pct_pt : 0", "as": "pct_safe" }
-        ],
-        "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 0.9 },
-        "encoding": {
-          "color": { "field": "pct_safe", "type": "quantitative",
-                     "title": "% commuters using public transport",
-                     "scale": { "scheme": "blues" } },
-          "tooltip": [
-            { "field": "properties.name", "title": "State/Territory" },
-            { "field": "pt_commuters", "title": "PT commuters" },
-            { "field": "total_commuters", "title": "Total commuters" },
-            { "field": "pct_pt", "title": "% PT", "format": ".1f" }
-          ]
+      "layer": [
+        { "data": { "graticule": "sphere" },
+          "mark": { "type": "geoshape", "fill": "#eef6fb" } },
+
+        { "data": { "graticule": { "step": [30, 30] } },
+          "mark": { "type": "geoshape", "stroke": "#cdd6de", "strokeWidth": 0.6 } },
+
+        {
+          "data": { "url": topoUrl, "format": { "type": "topojson", "feature": "states" } },
+          "transform": [
+            { "filter": {
+                "field": "properties.name",
+                "oneOf": [
+                  "New South Wales","Victoria","Queensland","South Australia",
+                  "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
+                ]
+              }
+            },
+            { "lookup": "properties.name",
+              "from": {
+                "data": { "url": csvUrl },
+                "key": "state_name",
+                "fields": ["pct_pt","pt_commuters","total_commuters"]
+              }
+            },
+            { "calculate": "isValid(datum.pct_pt) ? datum.pct_pt : 0", "as": "pct_safe" }
+          ],
+          "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 1 },
+          "encoding": {
+            "color": {
+              "field": "pct_safe", "type": "quantitative",
+              "title": "% commuters using public transport",
+              "scale": { "scheme": "blues" },
+              "legend": { "orient": "bottom", "direction": "horizontal" }
+            },
+            "tooltip": [
+              { "field": "properties.name", "title": "State/Territory" },
+              { "field": "pt_commuters", "title": "PT commuters", "format": "," },
+              { "field": "total_commuters", "title": "Total commuters", "format": "," },
+              { "field": "pct_safe", "title": "% using PT", "format": ".1f" }
+            ]
+          }
         }
+      ],
+
+      "config": {
+        "view": { "stroke": null },
+        "legend": { "titleFontSize": 12, "labelFontSize": 11, "titleLimit": 320, "padding": 4 }
       }
-    ],
+    };
 
-    "config": {
-      "view": { "stroke": null },
-      "legend": { "titleFontSize": 12, "labelFontSize": 11, "titleLimit": 320 }
-    }
-  };
-
-  vegaEmbed("#vis", spec, { actions: false })
-    .then(() => console.log("Final map rendered"))
-    .catch(err => console.error("Vega error:", err));
+    vegaEmbed("#vis", spec, { actions: false })
+      .then(() => console.log("Map rendered"))
+      .catch(err => console.error("Vega error:", err));
   </script>
 </body>
 </html>
