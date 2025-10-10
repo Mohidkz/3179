@@ -2,104 +2,169 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Public Transport Commuting — Australia (ABS 2021)</title>
+  <title>FIT3179 – Week 10 Task 2: Map + Bar Chart (ABS 2021)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Vega libs -->
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    html, body { height: 100%; margin: 0; }
-    body {
-      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
-      display: flex; flex-direction: column;
-    }
-    #vis { width: 100%; height: calc(100vh - 44px); min-height: 380px; }
-    .footer { font-size: 13px; color: #555; padding: 8px 12px; }
+    :root { --fg:#0f172a; --muted:#475569; --ocean:#eef6fb; --grid:#cdd6de; }
+    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: var(--fg); }
+    h1 { margin-bottom: 6px; }
+    h2 { margin: 22px 0 6px; font-size: 18px; }
+    .wrap { max-width: 1100px; }
+    .viz { margin: 8px 0 2px; }
+    .caption { margin: 8px 0 18px; font-size: 13px; color: var(--muted); }
   </style>
 </head>
 <body>
-  <div id="vis" aria-label="Choropleth map of public transport commuting in Australia"></div>
-  <div class="footer">
-    Source: ABS Census 2021 (Method of Travel to Work, MTWP). Geography: Natural Earth Admin-1.
-  </div>
+<div class="wrap">
+  <h1>Public Transport Commuting — ABS Census 2021</h1>
+  <div class="caption">Metric: % of employed commuters who used train, bus, ferry, or tram/light rail on Census day. Source: ABS 2021 (MTWP). Geography: Natural Earth Admin-1.</div>
 
-  <script>
-    const topoUrl = "data/au-states.json";
-    const csvUrl  = "data/au-pt-commuting-2021.csv";
+  <!-- ===== MAP (from Week 9, tidy & stable) ===== -->
+  <h2>Choropleth Map by State/Territory</h2>
+  <div id="map" class="viz" aria-label="Choropleth map of public transport commuting in Australia"></div>
 
-    const spec = {
-      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "description": "Share of employed commuters using public transport (ABS Census 2021), by Australian state/territory.",
+  <!-- ===== BAR (Week 10 Task 1) ===== -->
+  <h2>Horizontal Bar Chart with Annotation & Slider Filter</h2>
+  <div id="bars" class="viz" aria-label="Bar chart of public transport commuting in Australia"></div>
+  <div class="caption">Use the slider to filter states by minimum % using public transport. Dashed line marks the national average.</div>
+</div>
 
-      "width": "container",
-      "height": "container",
-      "autosize": { "type": "fit", "contains": "padding", "resize": true },
+<script>
+  const topoUrl = "data/au-states.json";            // must contain objects.states
+  const csvUrl  = "data/au-pt-commuting-2021.csv";  // headers: state_name,pt_commuters,total_commuters,pct_pt
 
-      "title": {
-        "text": "Where do Australians Use Public Transport to Get to Work?",
-        "subtitle": "Share of employed commuters by state/territory, ABS Census 2021 (MTWP)",
-        "anchor": "start",
-        "fontSize": 18,
-        "subtitleFontSize": 13,
-        "subtitleColor": "#555"
-      },
+  // --- Optional quick fetch sanity (shows 200 + headers in console) ---
+  Promise.all([
+    fetch(topoUrl).then(r => ({url: topoUrl, ok: r.ok, status: r.status})),
+    fetch(csvUrl).then(r => r.text().then(t => ({url: csvUrl, ok: true, status: 200, header: t.split(/\r?\n/)[0]})))
+  ]).then(x => console.table(x)).catch(e => console.warn(e));
 
-      "projection": { "type": "mercator", "center": [134, -28], "scale": 990 },
+  // ===================== MAP SPEC =====================
+  const mapSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Choropleth of % PT commuters by state (ABS 2021).",
+    "width": 980, "height": 560, "padding": 0,
+    "projection": { "type": "mercator", "center": [134, -28.5], "scale": 800 },
 
-      "layer": [
-        { "data": { "graticule": "sphere" },
-          "mark": { "type": "geoshape", "fill": "#eef6fb" } },
+    "layer": [
+      { "data": { "graticule": "sphere" },
+        "mark": { "type": "geoshape", "fill": "#eef6fb" } },
 
-        { "data": { "graticule": { "step": [30, 30] } },
-          "mark": { "type": "geoshape", "stroke": "#cdd6de", "strokeWidth": 0.6 } },
+      { "data": { "graticule": { "step": [30, 30] } },
+        "mark": { "type": "geoshape", "stroke": "#cdd6de", "strokeWidth": 0.6 } },
 
-        {
-          "data": { "url": topoUrl, "format": { "type": "topojson", "feature": "states" } },
-          "transform": [
-            { "filter": {
-                "field": "properties.name",
-                "oneOf": [
-                  "New South Wales","Victoria","Queensland","South Australia",
-                  "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
-                ]
-              }
-            },
-            { "lookup": "properties.name",
-              "from": {
-                "data": { "url": csvUrl },
-                "key": "state_name",
-                "fields": ["pct_pt","pt_commuters","total_commuters"]
-              }
-            },
-            { "calculate": "isValid(datum.pct_pt) ? datum.pct_pt : 0", "as": "pct_safe" }
-          ],
-          "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 1 },
-          "encoding": {
-            "color": {
-              "field": "pct_safe", "type": "quantitative",
-              "title": "% commuters using public transport",
-              "scale": { "scheme": "blues" },
-              "legend": { "orient": "bottom", "direction": "horizontal" }
-            },
-            "tooltip": [
-              { "field": "properties.name", "title": "State/Territory" },
-              { "field": "pt_commuters", "title": "PT commuters", "format": "," },
-              { "field": "total_commuters", "title": "Total commuters", "format": "," },
-              { "field": "pct_safe", "title": "% using PT", "format": ".1f" }
-            ]
-          }
+      {
+        "data": { "url": topoUrl, "format": { "type": "topojson", "feature": "states" } },
+        "transform": [
+          { "filter": { "field": "properties.name",
+            "oneOf": [
+              "New South Wales","Victoria","Queensland","South Australia",
+              "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
+            ] } },
+          { "lookup": "properties.name",
+            "from": { "data": { "url": csvUrl }, "key": "state_name",
+                      "fields": ["pct_pt","pt_commuters","total_commuters"] } },
+          { "calculate": "isValid(datum.pct_pt) ? toNumber(datum.pct_pt) : null", "as": "pct_num" }
+        ],
+        "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 1 },
+        "encoding": {
+          "color": {
+            "field": "pct_num", "type": "quantitative",
+            "title": "% commuters using public transport",
+            "scale": { "scheme": "blues" },
+            "legend": { "orient": "bottom", "direction": "horizontal" }
+          },
+          "tooltip": [
+            { "field": "properties.name", "title": "State/Territory" },
+            { "field": "pt_commuters", "title": "PT commuters", "format": "," },
+            { "field": "total_commuters", "title": "Total commuters", "format": "," },
+            { "field": "pct_num", "title": "% using PT", "format": ".1f" }
+          ]
         }
-      ],
-
-      "config": {
-        "view": { "stroke": null },
-        "legend": { "titleFontSize": 12, "labelFontSize": 11, "titleLimit": 320, "padding": 4 }
       }
-    };
+    ],
+    "config": { "view": { "stroke": null } }
+  };
 
-    vegaEmbed("#vis", spec, { actions: false })
-      .then(() => console.log("Map rendered"))
-      .catch(err => console.error("Vega error:", err));
-  </script>
+  // ===================== BAR SPEC =====================
+  const barSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "description": "Week 10 Task 1: Bar chart with slider filter and national average annotation.",
+    "width": 980, "height": 380,
+
+    "params": [
+      { "name": "thr", "value": 0,
+        "bind": { "input": "range", "min": 0, "max": 25, "step": 0.5, "name": "Show states ≥ % PT: " } }
+    ],
+
+    "data": { "url": csvUrl },
+
+    "transform": [
+      { "filter": { "field": "state_name",
+        "oneOf": [
+          "New South Wales","Victoria","Queensland","South Australia",
+          "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
+        ] } },
+      { "calculate": "toNumber(datum.pct_pt)", "as": "pct_num" },
+      { "filter": "datum.pct_num >= thr" }
+    ],
+
+    "layer": [
+      {
+        "mark": { "type": "bar", "cornerRadiusEnd": 3 },
+        "encoding": {
+          "y": { "field": "state_name", "type": "nominal", "title": "State / Territory", "sort": "-x" },
+          "x": { "field": "pct_num", "type": "quantitative", "title": "% commuters using public transport", "axis": { "format": ".1f" } },
+          "color": { "value": "#4f9dda" },
+          "tooltip": [
+            { "field": "state_name", "title": "State/Territory" },
+            { "field": "pt_commuters", "title": "PT commuters", "format": "," },
+            { "field": "total_commuters", "title": "Total commuters", "format": "," },
+            { "field": "pct_num", "title": "% using PT", "format": ".1f" }
+          ]
+        }
+      },
+      {
+        "transform": [
+          { "aggregate": [
+              {"op": "sum", "field": "pt_commuters", "as": "sum_pt"},
+              {"op": "sum", "field": "total_commuters", "as": "sum_total"}
+            ] },
+          { "calculate": "100 * datum.sum_pt / datum.sum_total", "as": "nat_pct" }
+        ],
+        "layer": [
+          { "mark": {"type": "rule", "stroke": "#1f2937", "strokeDash": [6,4], "strokeWidth": 1.2},
+            "encoding": { "x": {"field": "nat_pct", "type": "quantitative"} } },
+          { "mark": {"type": "text", "align": "left", "dx": 6, "dy": -6, "fontSize": 12, "fill": "#1f2937"},
+            "encoding": {
+              "x": {"field": "nat_pct", "type": "quantitative"},
+              "y": {"value": -5},
+              "text": {"aggregate": "max", "field": "nat_pct", "format": ".1f"}
+            } },
+          { "mark": {"type": "text", "align": "left", "dx": 6, "dy": -20, "fontSize": 12, "fill": "#1f2937"},
+            "encoding": {
+              "x": {"aggregate": "max", "field": "nat_pct"},
+              "y": {"value": -5},
+              "text": {"value": "National average:"}
+            } }
+        ]
+      }
+    ],
+
+    "config": {
+      "view": { "stroke": null },
+      "axis": { "labelFontSize": 12, "titleFontSize": 12 },
+      "bar": { "size": 22 }
+    }
+  };
+
+  // Render both
+  vegaEmbed("#map",  mapSpec, { actions: false }).then(()=>console.log("Rendered map")).catch(err=>console.error("Map error:", err));
+  vegaEmbed("#bars", barSpec, { actions: false }).then(()=>console.log("Rendered bars")).catch(err=>console.error("Bar error:", err));
+</script>
 </body>
 </html>
