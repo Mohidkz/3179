@@ -2,80 +2,212 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Week 10 – PT Commuting (ABS 2021): Bars + Map</title>
+  <title>PT Line — How Australians Commute (ABS 2021)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <style>
-    :root { --fg:#0f172a; --muted:#475569; --ocean:#eef6fb; --grid:#cdd6de; }
-    body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 20px; color: var(--fg); }
-    h1 { margin: 0 0 6px; font-size: 22px; }
-    h2 { margin: 18px 0 6px; font-size: 18px; }
-    .wrap { max-width: 1060px; margin: 0 auto; }
-    .section { background:#fff; padding: 10px 0 4px; }
-    .caption { margin: 8px 0 16px; font-size: 13px; color: var(--muted); }
-    .vis { width: 100%; }
-    .two-col { display: grid; grid-template-columns: 1fr; gap: 22px; }
-    @media (min-width: 980px) {
-      .two-col { grid-template-columns: 1fr; } /* keep single column for clarity */
+    /* =========================
+       Transport (PT) Theme
+       ========================= */
+    :root{
+      /* Palette tuned for WCAG AA */
+      --bg:#f6f7fb;              /* light concourse */
+      --card:#ffffff;            /* station tile */
+      --ink:#0b1220;             /* primary text */
+      --muted:#374151;           /* captions / secondary */
+      --grid:#d7dee6;            /* rails / separators */
+      --rail:#0b5fff;            /* transit blue (primary) */
+      --rail-acc:#0ea5e9;        /* transfer cyan */
+      --safety:#ffd60a;          /* safety yellow accents */
+      --ocean:#e6f0f8;           /* map water light */
+      --ok:#16a34a;              /* positive */
+      --danger:#ef4444;          /* error */
     }
-    .footer { margin-top: 12px; font-size: 13px; color: var(--muted); }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg:#0a0f1a;
+        --card:#0e1422;
+        --ink:#e6eef9;
+        --muted:#b6c2d0;
+        --grid:#223043;
+        --rail:#7aa7ff;
+        --rail-acc:#55c8fb;
+        --safety:#ffe066;
+        --ocean:#0b2233;
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;scroll-behavior:smooth}
+    .wrap{max-width:1080px;margin:0 auto;padding:22px 16px 48px}
+
+    /* Header: transit line with stops */
+    header{margin-bottom:14px}
+    h1{margin:0 0 8px;font-size:28px;letter-spacing:.2px}
+    .lede{color:var(--muted);max-width:72ch;margin:0 0 12px}
+    .line{
+      position:relative;display:flex;gap:18px;align-items:center;overflow:hidden;
+      padding:14px 12px;background:var(--card);border:1px solid var(--grid);border-radius:14px
+    }
+    .line:before{
+      content:"";position:absolute;left:48px;right:12px;top:50%;height:4px;background:var(--rail);
+      transform:translateY(-50%);border-radius:999px
+    }
+    .stop{
+      position:relative;display:flex;align-items:center;gap:10px;z-index:1
+    }
+    .badge{
+      width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+      background:var(--rail);color:#fff;font-weight:700;font-size:12px;border:2px solid #fff;
+      box-shadow:0 0 0 2px var(--rail)
+    }
+    .label{font-size:14px}
+    .label small{color:var(--muted)}
+    .line .stop:last-child .badge{background:var(--safety);color:#121212; box-shadow:0 0 0 2px var(--safety)}
+
+    /* Station cards */
+    .station{
+      background:var(--card);border:1px solid var(--grid);border-radius:16px;padding:18px 18px 14px;margin:18px 0
+    }
+    .station h2{margin:0 0 4px;font-size:20px}
+    .announce{display:flex;align-items:center;gap:8px;color:var(--muted);margin:6px 0 8px}
+    .announce .dot{width:10px;height:10px;border-radius:50%;background:var(--rail)}
+    .vis{width:100%}
+    figure{margin:10px 0 6px}
+    figcaption{color:var(--muted);font-size:13px;margin-top:6px}
+    .controls{display:flex;align-items:center;gap:10px;margin:6px 0 2px}
+    input[type="range"]{accent-color:var(--rail);width:280px}
+    .next{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-weight:700;color:var(--rail);text-decoration:none}
+    .next:hover{text-decoration:underline}
+
+    /* Mode chips */
+    .modes{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
+    .chip{
+      display:inline-flex;align-items:center;gap:6px;border:1px solid var(--grid);border-radius:999px;
+      padding:6px 10px;background:var(--card);font-size:13px
+    }
+    .chip .icon{width:16px;height:16px;display:inline-grid;place-items:center}
+
+    .hr{height:1px;background:var(--grid);margin:18px 0}
+    .note{font-size:13px;color:var(--muted)}
+    .footer{margin-top:18px;font-size:13px;color:var(--muted)}
   </style>
 </head>
 <body>
   <div class="wrap">
+    <header>
+      <h1>PT Line — How Australians Commute</h1>
+      <p class="lede">Ride a four-stop line through ABS Census 2021 (MTWP): compare states, map the pattern, see which modes people took, and step off with the key takeaways.</p>
+      <div class="line" aria-label="Journey steps">
+        <div class="stop"><div class="badge">1</div><div class="label">Compare<br><small>Who rides PT most?</small></div></div>
+        <div class="stop"><div class="badge">2</div><div class="label">Map<br><small>Where uptake concentrates</small></div></div>
+        <div class="stop"><div class="badge">3</div><div class="label">Modes<br><small>What we actually rode</small></div></div>
+        <div class="stop"><div class="badge">4</div><div class="label">Takeaways<br><small>What to remember</small></div></div>
+      </div>
+    </header>
 
-    <h1>Public Transport Commuting — ABS Census 2021</h1>
-    <div class="caption">
-      Dataset: % of employed commuters who used train, bus, ferry, or tram/light rail on Census day. Source: ABS 2021 (MTWP).
-    </div>
+    <!-- Station 1: Bars -->
+    <section class="station" id="st1" aria-labelledby="h1">
+      <h2 id="h1">Station 1 — State Comparison</h2>
+      <div class="announce"><span class="dot"></span><span>Set a floor to focus on higher-usage states. Dashed rule shows the national average (computed from the data).</span></div>
+      <div class="controls">
+        <label for="slider" class="note">Minimum % using PT:</label>
+        <!-- The slider is bound by Vega-Lite param; this label is just for UX context -->
+      </div>
+      <figure aria-label="Horizontal bar chart of % employed commuters using public transport by state">
+        <div id="vis-bars" class="vis"></div>
+        <figcaption>Metric: % of employed commuters using train, bus, tram/light rail, or ferry on Census day (ABS 2021 MTWP).</figcaption>
+      </figure>
+      <a class="next" href="#st2">Next stop → Map</a>
+    </section>
 
-    <!-- Task 1: Horizontal bar chart -->
-    <div class="section">
-      <h2>Task 1 — Bar Chart (Interactive)</h2>
-      <div id="vis-bars" class="vis" aria-label="Horizontal bar chart of PT commuting by state"></div>
-      <div class="caption">Interaction: tooltips, value labels, slider filter (0–8%).</div>
-    </div>
+    <!-- Station 2: Map -->
+    <section class="station" id="st2" aria-labelledby="h2">
+      <h2 id="h2">Station 2 — Geography on the Map</h2>
+      <div class="announce"><span class="dot"></span><span>Coastal, capital-city states tend to be darker (higher uptake), reflecting network coverage and service frequency. Hover to compare with Station 1.</span></div>
+      <figure aria-label="Choropleth map of % employed commuters using public transport by state">
+        <div id="vis-map" class="vis"></div>
+        <figcaption>Same metric as Station 1. Ocean + graticule for orientation.</figcaption>
+      </figure>
+      <a class="next" href="#st3">Next stop → Modes</a>
+    </section>
 
-    <!-- Task 2: Map (Week 9 map reused) -->
-    <div class="section">
-      <h2>Task 2 — Choropleth Map</h2>
-      <div id="vis-map" class="vis" aria-label="Choropleth map of PT commuting by state"></div>
-      <div class="caption">Includes ocean background and graticule; same metric as the bar chart for direct comparison.</div>
-    </div>
+    <!-- Station 3: Modes (Donut) -->
+    <section class="station" id="st3" aria-labelledby="h3">
+      <h2 id="h3">Station 3 — What We Rode</h2>
+      <div class="modes" aria-label="Mode legend with icons">
+        <span class="chip"><span class="icon">🚆</span>Train</span>
+        <span class="chip"><span class="icon">🚌</span>Bus</span>
+        <span class="chip"><span class="icon">🚋</span>Tram / Light rail</span>
+        <span class="chip"><span class="icon">⛴️</span>Ferry</span>
+      </div>
+      <div class="announce"><span class="dot"></span><span>Trains carry the bulk of PT commuters nationally; buses follow. Trams are city-specific; ferries serve niche corridors.</span></div>
+      <figure aria-label="Donut chart of national composition of PT modes">
+        <div id="vis-pie" class="vis"></div>
+        <figcaption>ABS 2021 MTWP (national totals). Labels show % share by mode.</figcaption>
+      </figure>
+      <a class="next" href="#st4">Final stop → Takeaways</a>
+    </section>
 
-    <div class="footer">
-      Source: ABS Census 2021 (Method of Travel to Work, MTWP). Geography: Natural Earth Admin-1 (simplified).
-    </div>
+    <div class="hr" role="separator"></div>
+
+    <!-- Station 4: Takeaways -->
+    <section class="station" id="st4" aria-labelledby="h4">
+      <h2 id="h4">Station 4 — Key Takeaways</h2>
+      <ul class="note" style="margin:6px 0 0 18px">
+        <li>Leaders in PT share large, rail-served metros; dispersed regions trail.</li>
+        <li>The map reinforces a coastal–capital pattern tied to service density.</li>
+        <li><strong>Trains dominate nationally</strong>, followed by buses; trams and ferries are smaller shares.</li>
+      </ul>
+      <p class="footer">Sources: ABS Census 2021 — Method of Travel to Work (MTWP). Geography: Natural Earth Admin-1 (simplified).</p>
+      <a class="next" href="#st1">Back to Station 1 ↑</a>
+    </section>
   </div>
 
   <script>
-    const csvUrl  = "data/au-pt-commuting-2021.csv";
-    const topoUrl = "data/au-states.json"; // expects objects.states
+    /* =========================
+       Data files (unchanged)
+       ========================= */
+    const csvStatesUrl = "data/au-pt-commuting-2021.csv";
+    const topoUrl      = "data/au-states.json";   // expects objects.states
+    const csvModesUrl  = "data/au-pt-modes.csv";
 
-    // (Optional) quick sanity log
-    Promise.all([
-      fetch(csvUrl).then(r=>({url:csvUrl, ok:r.ok, status:r.status})).catch(e=>({url:csvUrl, ok:false, error:String(e)})),
-      fetch(topoUrl).then(r=>({url:topoUrl, ok:r.ok, status:r.status})).catch(e=>({url:topoUrl, ok:false, error:String(e)}))
-    ]).then(x=>console.table(x));
+    /* =========================
+       Theme bridge for Vega-Lite
+       ========================= */
+    const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+    const ui = {
+      text:       isDark ? '#e6eef9' : '#0b1220',
+      muted:      isDark ? '#b6c2d0' : '#374151',
+      rule:       isDark ? '#88a0b9' : '#64748b',
+      bar:        isDark ? '#7aa7ff' : '#4f9dda',
+      water:      isDark ? '#0b2233' : '#e6f0f8',
+      grat:       isDark ? '#2b4258' : '#cdd6de',
+      landStroke: isDark ? '#101826' : '#ffffff'
+    };
+    const vlTheme = {
+      axis:   { labelColor: ui.text, titleColor: ui.text, gridColor: isDark ? '#223043' : '#e5e9ef' },
+      legend: { labelColor: ui.text, titleColor: ui.text },
+      view:   { stroke: null },
+      background: null
+    };
 
-    /* ---------------------------
-       Spec A — Week 10 Task 1 Bars
-       --------------------------- */
+    /* =========================
+       Spec 1 — Bars (Station 1)
+       ========================= */
     const specBars = {
       "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "description": "Horizontal bar chart with tooltips, labels, and slider filter.",
-      "width": 980,
-      "height": 380,
-      "data": { "url": csvUrl },
-      "params": [
-        {
-          "name": "pctMin_task1",
-          "value": 0,
-          "bind": { "input": "range", "min": 0, "max": 8, "step": 0.1, "name": "Minimum % using PT: " }
-        }
-      ],
+      "description": "Bars with slider + dynamic national average.",
+      "width": "container",
+      "height": 360,
+      "data": { "url": csvStatesUrl },
+      "params": [{
+        "name": "pctMin_task1",
+        "value": 0,
+        "bind": {"input":"range","min":0,"max":8,"step":0.1,"name":"Minimum % using PT: "}
+      }],
       "transform": [
         { "filter": { "field": "state_name", "oneOf": [
           "New South Wales","Victoria","Queensland","South Australia",
@@ -86,101 +218,125 @@
       ],
       "layer": [
         {
-          "mark": { "type": "bar", "cornerRadiusEnd": 3 },
+          "mark": {"type":"bar","cornerRadiusEnd":3},
           "encoding": {
-            "y": { "field": "state_name", "type": "nominal", "title": "State / Territory", "sort": "-x" },
-            "x": { "field": "pct_num", "type": "quantitative", "title": "% commuters using public transport", "axis": { "format": ".1f" } },
-            "color": { "value": "#4f9dda" },
+            "y": {"field":"state_name","type":"nominal","title":"State / Territory","sort":"-x"},
+            "x": {"field":"pct_num","type":"quantitative","title":"% of employed commuters using PT","axis":{"format":".1f"}},
+            "color": {"value": ui.bar },
             "tooltip": [
-              { "field": "state_name", "title": "State/Territory" },
-              { "field": "pt_commuters", "title": "PT commuters", "format": "," },
-              { "field": "total_commuters", "title": "Total commuters", "format": "," },
-              { "field": "pct_num", "title": "% using PT", "format": ".1f" }
+              {"field":"state_name","title":"State/Territory"},
+              {"field":"pt_commuters","title":"PT commuters","format":","},
+              {"field":"total_commuters","title":"Total commuters","format":","},
+              {"field":"pct_num","title":"% using PT","format":".1f"}
             ]
           }
         },
         {
-          "mark": { "type": "text", "align": "left", "dx": 4, "baseline": "middle", "fontSize": 12 },
+          "mark": {"type":"text","align":"left","dx":4,"baseline":"middle","fontSize":12},
           "encoding": {
-            "y": { "field": "state_name", "type": "nominal", "sort": "-x" },
-            "x": { "field": "pct_num", "type": "quantitative" },
-            "text": { "field": "pct_num", "type": "quantitative", "format": ".1f" },
-            "color": { "value": "#0f172a" }
+            "y": {"field":"state_name","type":"nominal","sort":"-x"},
+            "x": {"field":"pct_num","type":"quantitative"},
+            "text": {"field":"pct_num","type":"quantitative","format":".1f"},
+            "color": {"value": ui.text }
           }
         },
         {
-          "transform": [{ "aggregate": [{ "op": "mean", "field": "pct_num", "as": "avg_pct" }] }],
-          "mark": { "type": "rule", "stroke": "#64748b", "strokeDash": [5,4], "strokeWidth": 1 },
-          "encoding": { "x": { "field": "avg_pct", "type": "quantitative" } }
+          "transform":[{"aggregate":[{"op":"mean","field":"pct_num","as":"avg_pct"}]}],
+          "mark":{"type":"rule","stroke": ui.rule,"strokeDash":[5,4],"strokeWidth":1},
+          "encoding":{"x":{"field":"avg_pct","type":"quantitative"}}
         },
         {
-          "transform": [{ "aggregate": [{ "op": "mean", "field": "pct_num", "as": "avg_pct" }] }],
-          "mark": { "type": "text", "align": "left", "dx": -30, "dy": -8, "fontSize": 12, "color": "#475569" },
-          "encoding": {
-            "x": { "field": "avg_pct", "type": "quantitative" },
-            "y": { "value": -5 },
-            "text": { "value": "National avg: 4.6" }
-          }
+          "transform":[
+            {"aggregate":[{"op":"mean","field":"pct_num","as":"avg_pct"}]},
+            {"calculate":"'National avg: ' + format(datum.avg_pct, '.1f')","as":"avg_label"}
+          ],
+          "mark":{"type":"text","align":"left","dx":6,"dy":-8,"fontSize":12,"color": ui.muted },
+          "encoding":{"x":{"field":"avg_pct","type":"quantitative"},"y":{"value":-5},"text":{"field":"avg_label"}}
         }
       ],
-      "config": {
-        "view": { "stroke": null },
-        "axis": { "labelFontSize": 12, "titleFontSize": 12 },
-        "bar": { "size": 22 }
-      }
+      "config": { ...vlTheme, bar:{size:22} }
     };
 
-    /* ---------------------------
-       Spec B — Week 9 Map (clean)
-       --------------------------- */
+    /* =========================
+       Spec 2 — Map (Station 2)
+       ========================= */
     const specMap = {
-      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "description": "Choropleth map: % PT commuters by state (ABS 2021).",
-      "width": 980,
-      "height": 600,
-      "projection": { "type": "mercator", "center": [134, -28.5], "scale": 800 },
-      "layer": [
-        { "data": { "graticule": "sphere" }, "mark": { "type": "geoshape", "fill": "#eef6fb" } },
-        { "data": { "graticule": { "step": [30, 30] } }, "mark": { "type": "geoshape", "stroke": "#cdd6de", "strokeWidth": 0.6 } },
+      "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+      "description":"Choropleth: % PT commuters by state.",
+      "width":"container",
+      "height":520,
+      "projection":{"type":"mercator","center":[134,-28.5],"scale":800},
+      "layer":[
+        {"data":{"graticule":"sphere"},"mark":{"type":"geoshape","fill": ui.water }},
+        {"data":{"graticule":{"step":[30,30]}},"mark":{"type":"geoshape","stroke": ui.grat,"strokeWidth":0.6}},
         {
-          "data": { "url": topoUrl, "format": { "type": "topojson", "feature": "states" } },
-          "transform": [
-            { "filter": { "field": "properties.name", "oneOf": [
+          "data":{"url":topoUrl,"format":{"type":"topojson","feature":"states"}},
+          "transform":[
+            {"filter":{"field":"properties.name","oneOf":[
               "New South Wales","Victoria","Queensland","South Australia",
               "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
-            ] } },
-            { "lookup": "properties.name",
-              "from": { "data": { "url": csvUrl }, "key": "state_name", "fields": ["pct_pt","pt_commuters","total_commuters"] } },
-            { "calculate": "isValid(datum.pct_pt) ? toNumber(datum.pct_pt) : 0", "as": "pct_safe" }
+            ]}},
+            {"lookup":"properties.name",
+             "from":{"data":{"url":csvStatesUrl},"key":"state_name","fields":["pct_pt","pt_commuters","total_commuters"]}},
+            {"calculate":"isValid(datum.pct_pt) ? toNumber(datum.pct_pt) : 0","as":"pct_safe"}
           ],
-          "mark": { "type": "geoshape", "stroke": "#ffffff", "strokeWidth": 1 },
-          "encoding": {
-            "color": {
-              "field": "pct_safe", "type": "quantitative",
-              "title": "% commuters using public transport",
-              "scale": { "scheme": "blues" },
-              "legend": { "orient": "bottom", "direction": "horizontal" }
-            },
-            "tooltip": [
-              { "field": "properties.name", "title": "State/Territory" },
-              { "field": "pt_commuters", "title": "PT commuters", "format": "," },
-              { "field": "total_commuters", "title": "Total commuters", "format": "," },
-              { "field": "pct_safe", "title": "% using PT", "format": ".1f" }
+          "mark":{"type":"geoshape","stroke": ui.landStroke,"strokeWidth":1},
+          "encoding":{
+            "color":{"field":"pct_safe","type":"quantitative","title":"% of employed commuters using PT",
+                     "scale":{"scheme":"blues"},
+                     "legend":{"orient":"bottom","direction":"horizontal","titleLimit":360,"columns":4}},
+            "tooltip":[
+              {"field":"properties.name","title":"State/Territory"},
+              {"field":"pt_commuters","title":"PT commuters","format":","},
+              {"field":"total_commuters","title":"Total commuters","format":","},
+              {"field":"pct_safe","title":"% using PT","format":".1f"}
             ]
           }
         }
       ],
-      "config": { "view": { "stroke": null }, "legend": { "titleFontSize": 12, "labelFontSize": 11, "titleLimit": 320, "padding": 4 } }
+      "config": { ...vlTheme }
     };
 
-    /* Embed both (separate, to avoid param/signal collisions) */
-    vegaEmbed("#vis-bars", specBars, { actions: false })
-      .then(() => console.log("Rendered Task 1 (bars)"))
-      .catch(err => console.error("Vega error (bars):", err));
+    /* =========================
+       Spec 3 — Donut (Station 3)
+       ========================= */
+    const specPie = {
+      "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+      "description":"National composition of PT modes.",
+      "width":"container",
+      "height":360,
+      "data":{"url":csvModesUrl},
+      "transform":[
+        {"calculate":"toNumber(datum.commuters)","as":"commuters_num"},
+        {"joinaggregate":[{"op":"sum","field":"commuters_num","as":"total"}]},
+        {"calculate":"datum.commuters_num / datum.total * 100","as":"pct"},
+        {"calculate":"datum.mode + ' ' + format(datum.pct, '.0f') + '%'","as":"label"}
+      ],
+      "layer":[
+        {"mark":{"type":"arc","innerRadius":60,"outerRadius":140},
+         "encoding":{
+           "theta":{"field":"commuters_num","type":"quantitative"},
+           "color":{"field":"mode","type":"nominal","title":"Mode","scale":{"scheme":"tableau10"}},
+           "tooltip":[
+             {"field":"mode","title":"Mode"},
+             {"field":"commuters_num","title":"Commuters","format":","},
+             {"field":"pct","title":"Share","format":".1f"}
+           ]
+         }},
+        {"mark":{"type":"text","radius":165,"fontSize":12},
+         "encoding":{"theta":{"field":"commuters_num","type":"quantitative"},
+                     "text":{"field":"label"},
+                     "color":{"value": ui.text }}}
+      ],
+      "config": { ...vlTheme, legend:{orient:"right"} }
+    };
 
-    vegaEmbed("#vis-map", specMap, { actions: false })
-      .then(() => console.log("Rendered Task 2 (map)"))
-      .catch(err => console.error("Vega error (map):", err));
+    /* =========================
+       Embed all visuals
+       ========================= */
+    vegaEmbed("#vis-bars", specBars, {actions:false}).catch(err=>console.error("bars:",err));
+    vegaEmbed("#vis-map",  specMap,  {actions:false}).catch(err=>console.error("map:",err));
+    vegaEmbed("#vis-pie",  specPie,  {actions:false}).catch(err=>console.error("pie:",err));
   </script>
 </body>
 </html>
