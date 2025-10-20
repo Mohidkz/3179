@@ -1,0 +1,50 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 360,
+  "data": { "url": "data/pt-infra-density.csv" },
+  "transform": [
+    { "calculate": "toNumber(datum.infra_per_100k)", "as": "infra" },
+    {
+      "lookup": "state_name",
+      "from": {
+        "data": { "url": "data/au-pt-commuting-2021.csv" },
+        "key": "state_name",
+        "fields": ["pct_pt", "total_commuters"]
+      }
+    },
+    { "calculate": "toNumber(datum.pct_pt)", "as": "pct_num" }
+  ],
+  "encoding": {
+    "x": {
+      "field": "infra",
+      "type": "quantitative",
+      "title": "PT stops/stations per 100,000 residents",
+      "axis": { "format": ".0f" },
+      "scale": { "domain": [220, 520], "nice": false }
+    },
+    "y": {
+      "field": "pct_num",
+      "type": "quantitative",
+      "title": "% using PT",
+      "axis": { "format": ".1f" },
+      "scale": { "domain": [3.5, 7.8], "nice": false }
+    }
+  },
+  "layer": [
+    {
+      "mark": { "type": "point", "filled": true, "size": 220, "stroke": "#0b1220", "strokeWidth": 0.6 },
+      "encoding": {
+        "color": { "field": "state_name", "type": "nominal", "legend": null },
+        "tooltip": [
+          { "field": "state_name" },
+          { "field": "infra", "title": "Infra / 100k", "format": ".1f" },
+          { "field": "pct_num", "title": "% using PT", "format": ".1f" },
+          { "field": "total_commuters", "title": "Total commuters", "format": "," }
+        ]
+      }
+    },
+    { "transform": [{ "regression": "pct_num", "on": "infra" }], "mark": { "type": "line", "strokeDash": [5, 4] } },
+    { "mark": { "type": "text", "dy": -8, "fontSize": 12 }, "encoding": { "text": { "field": "state_name" } } }
+  ]
+}

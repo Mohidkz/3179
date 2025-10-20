@@ -1,0 +1,22 @@
+{
+  "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+  "width":"container","height":360,
+  "data":{"url":"data/au-pt-modes.csv"},
+  "transform":[
+    {"calculate":"toNumber(datum.commuters)","as":"commuters_num"},
+    {"joinaggregate":[{"op":"sum","field":"commuters_num","as":"total"}]},
+    {"calculate":"datum.commuters_num / datum.total * 100","as":"pct"},
+    {"calculate":"datum.mode + ' ' + format(datum.pct, '.0f') + '%'","as":"label"}
+  ],
+  "layer":[
+    {"mark":{"type":"arc","innerRadius":60,"outerRadius":140},
+     "encoding":{
+       "theta":{"field":"commuters_num","type":"quantitative"},
+       "color":{"field":"mode","type":"nominal","title":"Mode","scale":{"scheme":"tableau10"}},
+       "tooltip":[{"field":"mode","title":"Mode"},{"field":"commuters_num","title":"Commuters","format":","},{"field":"pct","title":"Share","format":".1f"}]
+     }},
+    {"mark":{"type":"text","radius":165,"fontSize":12},
+     "encoding":{"theta":{"field":"commuters_num","type":"quantitative"},"text":{"field":"label"}}}
+  ],
+  "config":{"legend":{"orient":"right"}}
+}

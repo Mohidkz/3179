@@ -1,0 +1,17 @@
+{
+  "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+  "width":"container","height":360,
+  "data":{"url":"data/vic-monthly-patronage.csv"},
+  "transform":[
+    {"calculate":"datetime(toNumber(datum.Year), toNumber(datum.Month)-1, 1)","as":"date"},
+    {"fold":["Metropolitan train","Metropolitan tram","Metropolitan bus"],"as":["mode","patronage"]},
+    {"calculate":"toNumber(datum.patronage)","as":"pax"}
+  ],
+  "mark":{"type":"line","interpolate":"monotone"},
+  "encoding":{
+    "x":{"field":"date","type":"temporal","title":"Month"},
+    "y":{"field":"pax","type":"quantitative","title":"Patronage (boardings)","axis":{"format":"~s"}},
+    "color":{"field":"mode","type":"nominal","title":"Mode"},
+    "tooltip":[{"field":"date","title":"Month","type":"temporal"},{"field":"mode","title":"Mode"},{"field":"pax","title":"Patronage","format":","}]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 280,
+  "data": { "url": "data/a-validations-2021Q1.csv", "format": { "type": "csv" } },
+  "transform": [
+    {
+      "calculate": "(isValid(datum.VALIDATION_DATE) ? datum.VALIDATION_DATE : (isValid(datum['Validation Date']) ? datum['Validation Date'] : (isValid(datum.validation_date) ? datum.validation_date : (isValid(datum.Date) ? datum.Date : datum.date))))",
+      "as": "rawDate"
+    },
+    {
+      "calculate": "isValid(timeParse('%d/%m/%Y', datum.rawDate)) ? timeParse('%d/%m/%Y', datum.rawDate) : (isValid(timeParse('%-d/%-m/%Y', datum.rawDate)) ? timeParse('%-d/%-m/%Y', datum.rawDate) : (isValid(timeParse('%Y-%m-%d', datum.rawDate)) ? timeParse('%Y-%m-%d', datum.rawDate) : toDate(datum.rawDate)))",
+      "as": "dt"
+    },
+    { "filter": "isValid(datum.dt)" },
+    { "timeUnit": "week", "field": "dt", "as": "wk" },
+    { "joinaggregate": [{ "op": "min", "field": "wk", "as": "wkmin" }] },
+    {
+      "calculate": "floor((toNumber(datum.wk) - toNumber(datum.wkmin)) / (1000*60*60*24*7)) + 1",
+      "as": "W"
+    },
+    { "timeUnit": "day", "field": "dt", "as": "dow_num" },
+    {
+      "calculate": "isValid(datum.dow_num) ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][datum.dow_num] : '—'",
+      "as": "dow_name"
+    },
+    {
+      "calculate": "(isValid(datum.BAND_BOARDINGS_FLOOR) ? toNumber(datum.BAND_BOARDINGS_FLOOR) : (isValid(datum['band_boardings_floor']) ? toNumber(datum['band_boardings_floor']) : (isValid(datum.BOARDINGS) ? toNumber(datum.BOARDINGS) : (isValid(datum.Validations) ? toNumber(datum.Validations) : 0))))",
+      "as": "count_floor"
+    },
+    {
+      "aggregate": [{ "op": "sum", "field": "count_floor", "as": "validations" }],
+      "groupby": ["W", "dow_name"]
+    }
+  ],
+  "mark": "rect",
+  "encoding": {
+    "x": {
+      "field": "W",
+      "type": "quantitative",
+      "title": "Week (Q1 2021)",
+      "axis": { "tickMinStep": 1, "labelExpr": "'W' + datum.value" }
+    },
+    "y": {
+      "field": "dow_name",
+      "type": "ordinal",
+      "title": "Day of week",
+      "sort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    },
+    "color": {
+      "field": "validations",
+      "type": "quantitative",
+      "title": "Taps (band floors)",
+      "scale": { "scheme": "blues" },
+      "legend": { "format": "~s" }
+    },
+    "tooltip": [
+      { "field": "W", "title": "Week (Q1)", "type": "quantitative" },
+      { "field": "dow_name", "title": "Day" },
+      { "field": "validations", "title": "Taps (band floors)", "type": "quantitative", "format": "," }
+    ]
+  }
+}

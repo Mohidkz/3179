@@ -1,0 +1,18 @@
+{
+  "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+  "width":"container","height":360,
+  "data":{"url":"data/au-pt-commuting-2021.csv"},
+  "transform":[
+    {"calculate":"toNumber(datum.pct_pt)","as":"pct"},
+    {"joinaggregate":[{"op":"mean","field":"pct","as":"avg"}]},
+    {"calculate":"datum.pct - datum.avg","as":"delta"},
+    {"filter":"isValid(datum.delta)"}
+  ],
+  "mark":{"type":"bar"},
+  "encoding":{
+    "y":{"field":"state_name","type":"nominal","sort":{"field":"delta","order":"descending"},"title":"State / Territory"},
+    "x":{"field":"delta","type":"quantitative","title":"Δ vs national avg (pp)","axis":{"format":"+.1f"}},
+    "color":{"condition":{"test":"datum.delta>=0","value":"#4f9dda"},"value":"#cfd8e3"},
+    "tooltip":[{"field":"state_name","title":"State/Territory"},{"field":"pct","title":"% using PT","format":".1f"},{"field":"delta","title":"Δ vs avg","format":"+.1f"}]
+  }
+}

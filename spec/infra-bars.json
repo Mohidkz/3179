@@ -1,0 +1,19 @@
+{
+  "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+  "width":"container","height":200,
+  "data":{"url":"data/pt-infra-density.csv"},
+  "transform":[{"calculate":"toNumber(datum.infra_per_100k)","as":"infra"}],
+  "mark":{"type":"bar","cornerRadiusEnd":3},
+  "encoding":{
+    "y":{"field":"state_name","type":"nominal","sort":"-x","title":"State"},
+    "x":{"field":"infra","type":"quantitative","title":"PT stops/stations per 100,000","axis":{"format":".0f"}},
+    "color":{"value":"#4f9dda"},
+    "tooltip":[
+      {"field":"state_name","title":"State"},
+      {"field":"infra","title":"Infra / 100k","format":".1f"},
+      {"field":"total_stops_01","title":"Stops/Stations","format":","},
+      {"field":"erp_2021","title":"ERP 2021","format":","}
+    ]
+  },
+  "config":{"bar":{"size":22}}
+}

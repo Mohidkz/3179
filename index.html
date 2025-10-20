@@ -2,341 +2,296 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>PT Line — How Australians Commute (ABS 2021)</title>
+  <title>PT Line — How Australians Commute (ABS 2021 + State Sources)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="author" content="Muhammad Mohid Khanzada (ID: 33891095)">
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <style>
-    /* =========================
-       Transport (PT) Theme
-       ========================= */
     :root{
-      /* Palette tuned for WCAG AA */
-      --bg:#f6f7fb;              /* light concourse */
-      --card:#ffffff;            /* station tile */
-      --ink:#0b1220;             /* primary text */
-      --muted:#374151;           /* captions / secondary */
-      --grid:#d7dee6;            /* rails / separators */
-      --rail:#0b5fff;            /* transit blue (primary) */
-      --rail-acc:#0ea5e9;        /* transfer cyan */
-      --safety:#ffd60a;          /* safety yellow accents */
-      --ocean:#e6f0f8;           /* map water light */
-      --ok:#16a34a;              /* positive */
-      --danger:#ef4444;          /* error */
+      /* Transit theme (light) */
+      --bg:#f6f8fb; --card:#ffffff; --ink:#0b1220; --muted:#526071; --grid:#d9e1ea;
+      --rail:#0b5fff;  /* train */
+      --bus:#16a34a;   /* bus  */
+      --tram:#f59e0b;  /* tram */
+      --ferry:#14b8a6; /* ferry */
+      --accent:#7c3aed;
+      --ocean:#e6f1fb;
+      --pill-bg:#eef2f7; --pill-fg:#0b1220; --pill-br:#cfd7e3;
     }
     @media (prefers-color-scheme: dark){
       :root{
-        --bg:#0a0f1a;
-        --card:#0e1422;
-        --ink:#e6eef9;
-        --muted:#b6c2d0;
-        --grid:#223043;
-        --rail:#7aa7ff;
-        --rail-acc:#55c8fb;
-        --safety:#ffe066;
-        --ocean:#0b2233;
+        /* Transit theme (dark) */
+        --bg:#0b1220; --card:#0f172a; --ink:#e6eef9; --muted:#b6c2d0; --grid:#263449;
+        --rail:#7aa7ff; --bus:#4ade80; --tram:#fbbf24; --ferry:#5eead4; --accent:#a78bfa;
+        --ocean:#0c2135;
+        --pill-bg:#152238; --pill-fg:#e6eef9; --pill-br:#2b3b53;
       }
     }
-
     *{box-sizing:border-box}
     html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;scroll-behavior:smooth}
-    .wrap{max-width:1080px;margin:0 auto;padding:22px 16px 48px}
-
-    /* Header: transit line with stops */
-    header{margin-bottom:14px}
+    .wrap{max-width:1080px;margin:0 auto;padding:24px 16px 56px}
+    header{margin-bottom:14px;position:relative}
     h1{margin:0 0 8px;font-size:28px;letter-spacing:.2px}
-    .lede{color:var(--muted);max-width:72ch;margin:0 0 12px}
-    .line{
-      position:relative;display:flex;gap:18px;align-items:center;overflow:hidden;
-      padding:14px 12px;background:var(--card);border:1px solid var(--grid);border-radius:14px
-    }
-    .line:before{
-      content:"";position:absolute;left:48px;right:12px;top:50%;height:4px;background:var(--rail);
-      transform:translateY(-50%);border-radius:999px
-    }
-    .stop{
-      position:relative;display:flex;align-items:center;gap:10px;z-index:1
-    }
-    .badge{
-      width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
-      background:var(--rail);color:#fff;font-weight:700;font-size:12px;border:2px solid #fff;
-      box-shadow:0 0 0 2px var(--rail)
-    }
-    .label{font-size:14px}
-    .label small{color:var(--muted)}
-    .line .stop:last-child .badge{background:var(--safety);color:#121212; box-shadow:0 0 0 2px var(--safety)}
-
-    /* Station cards */
-    .station{
-      background:var(--card);border:1px solid var(--grid);border-radius:16px;padding:18px 18px 14px;margin:18px 0
-    }
-    .station h2{margin:0 0 4px;font-size:20px}
-    .announce{display:flex;align-items:center;gap:8px;color:var(--muted);margin:6px 0 8px}
-    .announce .dot{width:10px;height:10px;border-radius:50%;background:var(--rail)}
+    .lede{color:var(--muted);max-width:72ch;margin:0 0 12px;font-size:16px}
+    .station{background:var(--card);border:1px solid var(--grid);border-radius:16px;padding:18px 18px 14px;margin:18px 0}
+    .station h2{margin:0 0 8px;font-size:20px;display:flex;gap:8px;align-items:center}
+    .grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    figure{margin:8px 0 2px}
+    .span6{grid-column:span 6}.span12{grid-column:span 12}
     .vis{width:100%}
-    figure{margin:10px 0 6px}
-    figcaption{color:var(--muted);font-size:13px;margin-top:6px}
-    .controls{display:flex;align-items:center;gap:10px;margin:6px 0 2px}
-    input[type="range"]{accent-color:var(--rail);width:280px}
+    figcaption{color:var(--muted);font-size:14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .line{position:relative;display:flex;gap:18px;align-items:center;overflow:hidden;padding:14px 12px;background:var(--card);border:1px solid var(--grid);border-radius:14px}
+    .line:before{content:"";position:absolute;left:48px;right:12px;top:50%;height:4px;background:var(--rail);transform:translateY(-50%);border-radius:999px}
+    .stop{position:relative;display:flex;align-items:center;gap:10px;z-index:1}
+    .badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--rail);color:#fff;font-weight:700;font-size:12px;border:2px solid #fff;box-shadow:0 0 0 2px var(--rail)}
+    .label{font-size:14px}.label small{color:var(--muted)}
+    .line .stop:nth-child(3) .badge{background:var(--bus);box-shadow:0 0 0 2px var(--bus)}
+    .line .stop:nth-child(4) .badge{background:var(--tram);box-shadow:0 0 0 2px var(--tram)}
+    .line .stop:nth-child(5) .badge{background:var(--ferry);box-shadow:0 0 0 2px var(--ferry)}
+    .line .stop:last-child .badge{background:var(--accent);color:#121212;box-shadow:0 0 0 2px var(--accent)}
+    .hr{height:1px;background:var(--grid);margin:18px 0}
     .next{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-weight:700;color:var(--rail);text-decoration:none}
     .next:hover{text-decoration:underline}
-
-    /* Mode chips */
-    .modes{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
-    .chip{
-      display:inline-flex;align-items:center;gap:6px;border:1px solid var(--grid);border-radius:999px;
-      padding:6px 10px;background:var(--card);font-size:13px
-    }
-    .chip .icon{width:16px;height:16px;display:inline-grid;place-items:center}
-
-    .hr{height:1px;background:var(--grid);margin:18px 0}
+    details.footer{margin-top:10px;font-size:13px;color:var(--muted)}
     .note{font-size:13px;color:var(--muted)}
-    .footer{margin-top:18px;font-size:13px;color:var(--muted)}
+    .body{color:var(--muted);max-width:75ch;margin:6px 0 2px}
+    .jsonbtn{
+      display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--pill-br);
+      background:var(--pill-bg); color:var(--pill-fg); font-size:12px; text-decoration:none; font-weight:600; line-height:1;
+    }
+    .jsonbtn:hover{filter:brightness(1.05)}
+    .jsonbtn:focus{outline:3px solid color-mix(in oklab, var(--rail), transparent 60%); outline-offset:2px}
+    /* subtle “route striping” under header */
+    .route-bg{position:absolute;inset:auto 0 -10px 0;height:8px;background:
+      linear-gradient(90deg,var(--rail) 0 25%, var(--bus) 25% 50%, var(--tram) 50% 75%, var(--ferry) 75% 100%);
+      border-radius:99px;opacity:.25}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <h1>PT Line — How Australians Commute</h1>
-      <p class="lede">Ride a four-stop line through ABS Census 2021 (MTWP): compare states, map the pattern, see which modes people took, and step off with the key takeaways.</p>
+      <p class="lede">
+        A transport-themed storyline: snapshot (ABS 2021 MTWP), geography, national mode split, infrastructure vs uptake, plus <strong>operational views</strong> — Victoria monthly patronage and Adelaide smartcard validations.
+      </p>
       <div class="line" aria-label="Journey steps">
-        <div class="stop"><div class="badge">1</div><div class="label">Compare<br><small>Who rides PT most?</small></div></div>
+        <div class="stop"><div class="badge">1</div><div class="label">Compare<br><small>% using PT</small></div></div>
         <div class="stop"><div class="badge">2</div><div class="label">Map<br><small>Where uptake concentrates</small></div></div>
-        <div class="stop"><div class="badge">3</div><div class="label">Modes<br><small>What we actually rode</small></div></div>
-        <div class="stop"><div class="badge">4</div><div class="label">Takeaways<br><small>What to remember</small></div></div>
+        <div class="stop"><div class="badge">3</div><div class="label">Modes<br><small>National split</small></div></div>
+        <div class="stop"><div class="badge">4</div><div class="label">Infra ↔ Uptake<br><small>Access vs share</small></div></div>
+        <div class="stop"><div class="badge">5</div><div class="label">Ops: VIC & SA<br><small>Monthly use & taps</small></div></div>
+        <div class="stop"><div class="badge">6</div><div class="label">Takeaways<br><small>What to remember</small></div></div>
       </div>
+      <div class="route-bg" aria-hidden="true"></div>
     </header>
 
-    <!-- Station 1: Bars -->
-    <section class="station" id="st1" aria-labelledby="h1">
-      <h2 id="h1">Station 1 — State Comparison</h2>
-      <div class="announce"><span class="dot"></span><span>Set a floor to focus on higher-usage states. Dashed rule shows the national average (computed from the data).</span></div>
-      <div class="controls">
-        <label for="slider" class="note">Minimum % using PT:</label>
-        <!-- The slider is bound by Vega-Lite param; this label is just for UX context -->
+    <!-- Station 1 -->
+    <section class="station" id="st1">
+      <h2>🚇 Station 1 — State Comparison</h2>
+      <p class="body">
+        Snapshot: what share of employed people used public transport to get to work in 2021? The lollipop ranks the states; the diverging bars show how far each sits above/below the national average.
+      </p>
+      <div class="grid12">
+        <figure class="span6">
+          <div id="vis-lollipop" class="vis" aria-label="Lollipop ranking"></div>
+          <figcaption>
+            <span>Lollipop ranking — % of employed commuters using PT (ABS 2021 MTWP).</span>
+            <a class="jsonbtn" href="spec/lollipop.json">View JSON</a>
+          </figcaption>
+        </figure>
+        <figure class="span6">
+          <div id="vis-diverge" class="vis" aria-label="Deviation from national average"></div>
+          <figcaption>
+            <span>Deviation from national average (percentage points).</span>
+            <a class="jsonbtn" href="spec/diverge.json">View JSON</a>
+          </figcaption>
+        </figure>
       </div>
-      <figure aria-label="Horizontal bar chart of % employed commuters using public transport by state">
-        <div id="vis-bars" class="vis"></div>
-        <figcaption>Metric: % of employed commuters using train, bus, tram/light rail, or ferry on Census day (ABS 2021 MTWP).</figcaption>
-      </figure>
       <a class="next" href="#st2">Next stop → Map</a>
     </section>
 
-    <!-- Station 2: Map -->
-    <section class="station" id="st2" aria-labelledby="h2">
-      <h2 id="h2">Station 2 — Geography on the Map</h2>
-      <div class="announce"><span class="dot"></span><span>Coastal, capital-city states tend to be darker (higher uptake), reflecting network coverage and service frequency. Hover to compare with Station 1.</span></div>
-      <figure aria-label="Choropleth map of % employed commuters using public transport by state">
-        <div id="vis-map" class="vis"></div>
-        <figcaption>Same metric as Station 1. Ocean + graticule for orientation.</figcaption>
-      </figure>
+    <!-- Station 2 -->
+    <section class="station" id="st2">
+      <h2>🗺️ Station 2 — Geography & Magnitude</h2>
+      <p class="body">
+        Uptake clusters in the big, rail-served metros along the coast. The choropleth shows geography; the waffle multiples translate percentages into people: “out of 100 workers, how many used PT?”
+      </p>
+      <div class="grid12">
+        <figure class="span12">
+          <div id="vis-map" class="vis" aria-label="Choropleth map"></div>
+          <figcaption>
+            <span>% using PT by state (same metric as Station 1).</span>
+            <a class="jsonbtn" href="spec/au-pt-map.json">View JSON</a>
+          </figcaption>
+        </figure>
+        <figure class="span12">
+          <div id="vis-waffles" class="vis" aria-label="Waffle multiples"></div>
+          <figcaption>
+            <span>Waffle small-multiples — out of 100 employed people, how many used PT?</span>
+            <a class="jsonbtn" href="spec/waffles.json">View JSON</a>
+          </figcaption>
+        </figure>
+      </div>
       <a class="next" href="#st3">Next stop → Modes</a>
     </section>
 
-    <!-- Station 3: Modes (Donut) -->
-    <section class="station" id="st3" aria-labelledby="h3">
-      <h2 id="h3">Station 3 — What We Rode</h2>
-      <div class="modes" aria-label="Mode legend with icons">
-        <span class="chip"><span class="icon">🚆</span>Train</span>
-        <span class="chip"><span class="icon">🚌</span>Bus</span>
-        <span class="chip"><span class="icon">🚋</span>Tram / Light rail</span>
-        <span class="chip"><span class="icon">⛴️</span>Ferry</span>
-      </div>
-      <div class="announce"><span class="dot"></span><span>Trains carry the bulk of PT commuters nationally; buses follow. Trams are city-specific; ferries serve niche corridors.</span></div>
-      <figure aria-label="Donut chart of national composition of PT modes">
-        <div id="vis-pie" class="vis"></div>
-        <figcaption>ABS 2021 MTWP (national totals). Labels show % share by mode.</figcaption>
+    <!-- Station 3 -->
+    <section class="station" id="st3">
+      <h2>🚉 Station 3 — What We Rode (National)</h2>
+      <p class="body">Trains take the biggest slice nationally, followed by buses; trams and ferries are smaller but vital in specific cities.</p>
+      <figure>
+        <div id="vis-pie" class="vis" aria-label="Donut mode split"></div>
+        <figcaption>
+          <span>ABS 2021 MTWP national mode split.</span>
+          <a class="jsonbtn" href="spec/pie.json">View JSON</a>
+        </figcaption>
       </figure>
-      <a class="next" href="#st4">Final stop → Takeaways</a>
+      <a class="next" href="#st4">Next stop → Infrastructure & Uptake</a>
+    </section>
+
+    <!-- Station 4 -->
+    <section class="station" id="st4">
+      <h2>🧭 Station 4 — Does Infrastructure Density Relate to Uptake?</h2>
+      <p class="body">Access matters: states with more stops/stations per 100k people generally show higher PT shares. The dashed line summarises the association (descriptive, not causal).</p>
+      <figure>
+        <div id="vis-scatter" class="vis" aria-label="Scatter infra vs uptake"></div>
+        <figcaption>
+          <span>Stops filtered (location_type 0/blank/1), deduped by <code>COALESCE(parent_station, stop_id)</code>; scaled by ABS ERP × 100,000.</span>
+          <a class="jsonbtn" href="spec/scatter.json">View JSON</a>
+        </figcaption>
+      </figure>
+      <figure>
+        <div id="vis-infra" class="vis" aria-label="Infra ranking"></div>
+        <figcaption>
+          <span>Stops/stations per 100k (ranking) — availability proxy.</span>
+          <a class="jsonbtn" href="spec/infra-bars.json">View JSON</a>
+        </figcaption>
+      </figure>
+      <a class="next" href="#st5">Next stop → VIC & SA operations</a>
+    </section>
+
+    <!-- Station 5 -->
+    <section class="station" id="st5">
+      <h2>🚌 Station 5 — Operational Views: VIC & SA</h2>
+      <p class="body"><strong>Victoria:</strong> monthly boardings show the pandemic shock and recovery by mode. <strong>Adelaide:</strong> smartcard taps (band-floor counts) reveal a bus-led mix and a weekday rhythm in early 2021.</p>
+      <figure>
+        <div id="vis-vic-lines" class="vis" aria-label="Victoria monthly patronage"></div>
+        <figcaption>
+          <span><strong>Victoria monthly patronage (2018–2025)</strong> — Metropolitan train, tram, bus.</span>
+          <a class="jsonbtn" href="spec/vic-lines.json">View JSON</a>
+        </figcaption>
+      </figure>
+      <div class="grid12">
+        <figure class="span6">
+          <div id="vis-sa-stacked" class="vis" aria-label="Adelaide validations by mode (share)"></div>
+          <figcaption>
+            <span><strong>Adelaide mode mix (2021 Q1)</strong> — 100% stacked: each bar shows the <em>share</em> of taps by mode per month (Bus / Train / Tram).</span>
+            <a class="jsonbtn" href="spec/sa-stacked.json">View JSON</a>
+          </figcaption>
+        </figure>
+        <figure class="span6">
+          <div id="vis-sa-heat" class="vis" aria-label="Adelaide weekday heatmap (weeks W1–W13)"></div>
+          <figcaption>
+            <span><strong>Adelaide taps by weekday</strong> — columns are <em>weeks W1–W13</em> (Jan–Mar 2021), rows are <em>Mon–Sun</em>; darker = more taps.</span>
+            <a class="jsonbtn" href="spec/sa-heat.json">View JSON</a>
+          </figcaption>
+        </figure>
+      </div>
+      <a class="next" href="#st6">Final stop → Takeaways</a>
     </section>
 
     <div class="hr" role="separator"></div>
 
-    <!-- Station 4: Takeaways -->
-    <section class="station" id="st4" aria-labelledby="h4">
-      <h2 id="h4">Station 4 — Key Takeaways</h2>
+    <!-- Station 6 -->
+    <section class="station" id="st6">
+      <h2>✅ Station 6 — Key Takeaways</h2>
       <ul class="note" style="margin:6px 0 0 18px">
-        <li>Leaders in PT share large, rail-served metros; dispersed regions trail.</li>
-        <li>The map reinforces a coastal–capital pattern tied to service density.</li>
-        <li><strong>Trains dominate nationally</strong>, followed by buses; trams and ferries are smaller shares.</li>
+        <li>States with large rail-served metros show higher PT shares; dispersed regions trail.</li>
+        <li>Trains lead nationally; buses follow; trams/ferries are city-specific.</li>
+        <li>Higher stop density tends to align with higher PT uptake (association).</li>
+        <li>VIC recovery is visible in monthly patronage; SA shows a weekday-heavy rhythm and bus-led mix.</li>
+        <li><strong>Innovation:</strong> Census snapshot + GTFS-derived infrastructure density + two operational feeds in one storyline.</li>
       </ul>
-      <p class="footer">Sources: ABS Census 2021 — Method of Travel to Work (MTWP). Geography: Natural Earth Admin-1 (simplified).</p>
+
+      <details class="footer">
+        <summary>Sources & licences</summary>
+        <ul>
+          <li>ABS Census 2021 — Method of Travel to Work (MTWP); ABS ERP Dec-2021 (attribution required).</li>
+          <li>Natural Earth Admin-1 (public domain) → TopoJSON.</li>
+          <li>GTFS stops: VIC (DataVic), QLD (Translink), SA (data.sa.gov.au), WA (Transperth).</li>
+          <li>Victoria monthly patronage: Vic DTP “Monthly public transport patronage by mode” (CSV).</li>
+          <li>Adelaide Metrocard validations 2021 Q1 (CC BY), band floors.</li>
+        </ul>
+        <p class="note">Hosted on GitHub Pages. All <a href="spec/">Vega-Lite JSON specs</a> and <a href="data/">data files</a> are in this repo.</p>
+      </details>
+
+      <p class="note" style="margin-top:12px">
+        <strong>Author:</strong> Muhammad Mohid Khanzada (ID: 33891095) •
+        <strong>Last updated:</strong> <span id="updated"></span>
+      </p>
       <a class="next" href="#st1">Back to Station 1 ↑</a>
     </section>
   </div>
 
   <script>
-    /* =========================
-       Data files (unchanged)
-       ========================= */
-    const csvStatesUrl = "data/au-pt-commuting-2021.csv";
-    const topoUrl      = "data/au-states.json";   // expects objects.states
-    const csvModesUrl  = "data/au-pt-modes.csv";
-
-    /* =========================
-       Theme bridge for Vega-Lite
-       ========================= */
+    // Inject a transit-themed Vega-Lite config so axes/titles are readable in both light and dark modes.
     const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
     const ui = {
-      text:       isDark ? '#e6eef9' : '#0b1220',
-      muted:      isDark ? '#b6c2d0' : '#374151',
-      rule:       isDark ? '#88a0b9' : '#64748b',
-      bar:        isDark ? '#7aa7ff' : '#4f9dda',
-      water:      isDark ? '#0b2233' : '#e6f0f8',
-      grat:       isDark ? '#2b4258' : '#cdd6de',
-      landStroke: isDark ? '#101826' : '#ffffff'
+      text:       getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || (isDark ? '#e6eef9' : '#0b1220'),
+      muted:      getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || (isDark ? '#b6c2d0' : '#526071'),
+      rule:       isDark ? '#43556d' : '#8aa0b6',
+      grid:       getComputedStyle(document.documentElement).getPropertyValue('--grid').trim() || (isDark ? '#263449' : '#e5e9ef'),
+      rail:       getComputedStyle(document.documentElement).getPropertyValue('--rail').trim() || '#0b5fff',
+      bus:        getComputedStyle(document.documentElement).getPropertyValue('--bus').trim() || '#16a34a',
+      tram:       getComputedStyle(document.documentElement).getPropertyValue('--tram').trim() || '#f59e0b',
+      ferry:      getComputedStyle(document.documentElement).getPropertyValue('--ferry').trim() || '#14b8a6',
+      accent:     getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c3aed',
+      water:      getComputedStyle(document.documentElement).getPropertyValue('--ocean').trim() || (isDark ? '#0b2233' : '#e6f0f8')
     };
+
     const vlTheme = {
-      axis:   { labelColor: ui.text, titleColor: ui.text, gridColor: isDark ? '#223043' : '#e5e9ef' },
+      background: null,
+      view: { stroke: null },
+      axis: {
+        labelColor: ui.text,
+        titleColor: ui.text,
+        gridColor: ui.grid,
+        domainColor: ui.rule,
+        tickColor: ui.rule
+      },
       legend: { labelColor: ui.text, titleColor: ui.text },
-      view:   { stroke: null },
-      background: null
+      mark: { color: ui.rail },
+      range: {
+        category: [ui.rail, ui.bus, ui.tram, ui.ferry, ui.accent, "#60a5fa", "#34d399", "#fde047"]
+      }
     };
 
-    /* =========================
-       Spec 1 — Bars (Station 1)
-       ========================= */
-    const specBars = {
-      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-      "description": "Bars with slider + dynamic national average.",
-      "width": "container",
-      "height": 360,
-      "data": { "url": csvStatesUrl },
-      "params": [{
-        "name": "pctMin_task1",
-        "value": 0,
-        "bind": {"input":"range","min":0,"max":8,"step":0.1,"name":"Minimum % using PT: "}
-      }],
-      "transform": [
-        { "filter": { "field": "state_name", "oneOf": [
-          "New South Wales","Victoria","Queensland","South Australia",
-          "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
-        ]}},
-        { "calculate": "toNumber(datum.pct_pt)", "as": "pct_num" },
-        { "filter": "datum.pct_num >= pctMin_task1" }
-      ],
-      "layer": [
-        {
-          "mark": {"type":"bar","cornerRadiusEnd":3},
-          "encoding": {
-            "y": {"field":"state_name","type":"nominal","title":"State / Territory","sort":"-x"},
-            "x": {"field":"pct_num","type":"quantitative","title":"% of employed commuters using PT","axis":{"format":".1f"}},
-            "color": {"value": ui.bar },
-            "tooltip": [
-              {"field":"state_name","title":"State/Territory"},
-              {"field":"pt_commuters","title":"PT commuters","format":","},
-              {"field":"total_commuters","title":"Total commuters","format":","},
-              {"field":"pct_num","title":"% using PT","format":".1f"}
-            ]
-          }
-        },
-        {
-          "mark": {"type":"text","align":"left","dx":4,"baseline":"middle","fontSize":12},
-          "encoding": {
-            "y": {"field":"state_name","type":"nominal","sort":"-x"},
-            "x": {"field":"pct_num","type":"quantitative"},
-            "text": {"field":"pct_num","type":"quantitative","format":".1f"},
-            "color": {"value": ui.text }
-          }
-        },
-        {
-          "transform":[{"aggregate":[{"op":"mean","field":"pct_num","as":"avg_pct"}]}],
-          "mark":{"type":"rule","stroke": ui.rule,"strokeDash":[5,4],"strokeWidth":1},
-          "encoding":{"x":{"field":"avg_pct","type":"quantitative"}}
-        },
-        {
-          "transform":[
-            {"aggregate":[{"op":"mean","field":"pct_num","as":"avg_pct"}]},
-            {"calculate":"'National avg: ' + format(datum.avg_pct, '.1f')","as":"avg_label"}
-          ],
-          "mark":{"type":"text","align":"left","dx":6,"dy":-8,"fontSize":12,"color": ui.muted },
-          "encoding":{"x":{"field":"avg_pct","type":"quantitative"},"y":{"value":-5},"text":{"field":"avg_label"}}
-        }
-      ],
-      "config": { ...vlTheme, bar:{size:22} }
-    };
+    async function draw(id, url){
+      const res = await fetch(url);
+      if(!res.ok){ throw new Error(`Failed to load ${url}`); }
+      const spec = await res.json();
+      spec.config = Object.assign({}, spec.config||{}, vlTheme);
+      await vegaEmbed(id, spec, {actions:false});
+    }
 
-    /* =========================
-       Spec 2 — Map (Station 2)
-       ========================= */
-    const specMap = {
-      "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
-      "description":"Choropleth: % PT commuters by state.",
-      "width":"container",
-      "height":520,
-      "projection":{"type":"mercator","center":[134,-28.5],"scale":800},
-      "layer":[
-        {"data":{"graticule":"sphere"},"mark":{"type":"geoshape","fill": ui.water }},
-        {"data":{"graticule":{"step":[30,30]}},"mark":{"type":"geoshape","stroke": ui.grat,"strokeWidth":0.6}},
-        {
-          "data":{"url":topoUrl,"format":{"type":"topojson","feature":"states"}},
-          "transform":[
-            {"filter":{"field":"properties.name","oneOf":[
-              "New South Wales","Victoria","Queensland","South Australia",
-              "Western Australia","Tasmania","Northern Territory","Australian Capital Territory"
-            ]}},
-            {"lookup":"properties.name",
-             "from":{"data":{"url":csvStatesUrl},"key":"state_name","fields":["pct_pt","pt_commuters","total_commuters"]}},
-            {"calculate":"isValid(datum.pct_pt) ? toNumber(datum.pct_pt) : 0","as":"pct_safe"}
-          ],
-          "mark":{"type":"geoshape","stroke": ui.landStroke,"strokeWidth":1},
-          "encoding":{
-            "color":{"field":"pct_safe","type":"quantitative","title":"% of employed commuters using PT",
-                     "scale":{"scheme":"blues"},
-                     "legend":{"orient":"bottom","direction":"horizontal","titleLimit":360,"columns":4}},
-            "tooltip":[
-              {"field":"properties.name","title":"State/Territory"},
-              {"field":"pt_commuters","title":"PT commuters","format":","},
-              {"field":"total_commuters","title":"Total commuters","format":","},
-              {"field":"pct_safe","title":"% using PT","format":".1f"}
-            ]
-          }
-        }
-      ],
-      "config": { ...vlTheme }
-    };
+    // Specs (JSON in /spec)
+    draw("#vis-lollipop","spec/lollipop.json");
+    draw("#vis-diverge","spec/diverge.json");
+    draw("#vis-map","spec/au-pt-map.json");
+    draw("#vis-waffles","spec/waffles.json");
+    draw("#vis-pie","spec/pie.json");
+    draw("#vis-scatter","spec/scatter.json");
+    draw("#vis-infra","spec/infra-bars.json");
+    draw("#vis-vic-lines","spec/vic-lines.json");
+    draw("#vis-sa-stacked","spec/sa-stacked.json");
+    draw("#vis-sa-heat","spec/sa-heat.json");
 
-    /* =========================
-       Spec 3 — Donut (Station 3)
-       ========================= */
-    const specPie = {
-      "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
-      "description":"National composition of PT modes.",
-      "width":"container",
-      "height":360,
-      "data":{"url":csvModesUrl},
-      "transform":[
-        {"calculate":"toNumber(datum.commuters)","as":"commuters_num"},
-        {"joinaggregate":[{"op":"sum","field":"commuters_num","as":"total"}]},
-        {"calculate":"datum.commuters_num / datum.total * 100","as":"pct"},
-        {"calculate":"datum.mode + ' ' + format(datum.pct, '.0f') + '%'","as":"label"}
-      ],
-      "layer":[
-        {"mark":{"type":"arc","innerRadius":60,"outerRadius":140},
-         "encoding":{
-           "theta":{"field":"commuters_num","type":"quantitative"},
-           "color":{"field":"mode","type":"nominal","title":"Mode","scale":{"scheme":"tableau10"}},
-           "tooltip":[
-             {"field":"mode","title":"Mode"},
-             {"field":"commuters_num","title":"Commuters","format":","},
-             {"field":"pct","title":"Share","format":".1f"}
-           ]
-         }},
-        {"mark":{"type":"text","radius":165,"fontSize":12},
-         "encoding":{"theta":{"field":"commuters_num","type":"quantitative"},
-                     "text":{"field":"label"},
-                     "color":{"value": ui.text }}}
-      ],
-      "config": { ...vlTheme, legend:{orient:"right"} }
-    };
-
-    /* =========================
-       Embed all visuals
-       ========================= */
-    vegaEmbed("#vis-bars", specBars, {actions:false}).catch(err=>console.error("bars:",err));
-    vegaEmbed("#vis-map",  specMap,  {actions:false}).catch(err=>console.error("map:",err));
-    vegaEmbed("#vis-pie",  specPie,  {actions:false}).catch(err=>console.error("pie:",err));
+    document.getElementById("updated").textContent =
+      new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
   </script>
 </body>
 </html>

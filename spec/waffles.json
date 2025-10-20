@@ -1,0 +1,76 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 500,
+  "data": { "url": "data/au-pt-commuting-2021.csv" },
+  "transform": [
+    { "calculate": "toNumber(datum.pct_pt)", "as": "pct" },
+    {
+      "filter": {
+        "field": "state_name",
+        "oneOf": [
+          "New South Wales",
+          "Victoria",
+          "Queensland",
+          "South Australia",
+          "Western Australia",
+          "Tasmania",
+          "Northern Territory",
+          "Australian Capital Territory"
+        ]
+      }
+    },
+    { "calculate": "round(datum.pct/10)", "as": "trains_used" },
+    { "calculate": "10", "as": "trains_total" },
+    { "calculate": "datum.state_name", "as": "State" },
+    { "flatten": [{ "expr": "sequence(0, datum.trains_total)" }], "as": "i" },
+    { "calculate": "floor(datum.i/5)", "as": "row" },
+    { "calculate": "datum.i%5", "as": "col" },
+    { "calculate": "datum.i < datum.trains_used ? 'Used PT' : 'Not used'", "as": "Use" }
+  ],
+  "facet": {
+    "field": "State",
+    "columns": 4,
+    "header": { "title": "", "labelFontSize": 13, "labelLimit": 120 }
+  },
+  "spec": {
+    "width": 170,
+    "height": 80,
+    "layer": [
+      {
+        "mark": {
+          "type": "text",
+          "baseline": "middle",
+          "fontSize": 24
+        },
+        "encoding": {
+          "x": { "field": "col", "type": "ordinal", "axis": null, "scale": { "domain": [0, 1, 2, 3, 4] } },
+          "y": { "field": "row", "type": "ordinal", "axis": null, "scale": { "domain": [0, 1] } },
+          "text": { "value": "🚆" },
+          "color": {
+            "field": "Use",
+            "type": "nominal",
+            "scale": { "domain": ["Used PT", "Not used"], "range": ["#0b5fff", "#e5e9ef"] },
+            "legend": null
+          },
+          "tooltip": [
+            { "field": "State", "title": "State" },
+            { "field": "pct", "title": "% using PT", "format": ".1f" },
+            { "field": "trains_used", "title": "Trains coloured (out of 10)" }
+          ]
+        }
+      },
+      {
+        "mark": { "type": "text", "align": "right", "fontSize": 12, "dy": 36 },
+        "encoding": {
+          "x": { "aggregate": "max", "field": "col", "type": "quantitative" },
+          "y": { "value": 0 },
+          "text": { "field": "pct", "type": "quantitative", "format": ".1f" }
+        }
+      }
+    ]
+  },
+  "config": {
+    "view": { "stroke": null }
+  }
+}

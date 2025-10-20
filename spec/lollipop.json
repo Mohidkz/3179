@@ -1,0 +1,50 @@
+{
+  "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+  "width":"container","height":360,
+  "data":{"url":"data/au-pt-commuting-2021.csv"},
+  "transform":[
+    {"calculate":"toNumber(datum.pct_pt)","as":"pct"},
+    {"joinaggregate":[{"op":"mean","field":"pct","as":"nat_avg"}]},
+    {"window":[{"op":"rank","as":"r_desc"}],"sort":[{"field":"pct","order":"descending"}]},
+    {"window":[{"op":"rank","as":"r_asc"}],"sort":[{"field":"pct","order":"ascending"}]},
+    {"filter":{"field":"state_name","oneOf":["New South Wales","Victoria","Queensland","South Australia","Western Australia","Tasmania","Northern Territory","Australian Capital Territory"]}}
+  ],
+  "layer":[
+    {
+      "mark":{"type":"rule","strokeDash":[4,4]},
+      "encoding":{"x":{"field":"nat_avg","type":"quantitative"},"color":{"value":"#94a3b8"}}
+    },
+    {
+      "mark":{"type":"rule"},
+      "encoding":{
+        "y":{"field":"state_name","type":"nominal","sort":{"field":"pct","order":"descending"},"title":"State / Territory"},
+        "x":{"field":"pct","type":"quantitative"},"x2":{"value":0},
+        "color":{"value":"#cfd8e3"}
+      }
+    },
+    {
+      "mark":{"type":"circle","size":140},
+      "encoding":{
+        "y":{"field":"state_name","type":"nominal","sort":{"field":"pct","order":"descending"}},
+        "x":{"field":"pct","type":"quantitative","title":"% of employed commuters using PT","axis":{"format":".1f"}},
+        "color":{"value":"#4f9dda"},
+        "tooltip":[
+          {"field":"state_name","title":"State/Territory"},
+          {"field":"pct","title":"% using PT","format":".1f"},
+          {"field":"pt_commuters","title":"PT commuters","format":","},
+          {"field":"total_commuters","title":"Total commuters","format":","}
+        ]
+      }
+    },
+    {
+      "transform":[{"filter":"datum.r_desc==1"}],
+      "mark":{"type":"text","dx":8,"dy":-8,"fontSize":12},
+      "encoding":{"x":{"field":"pct","type":"quantitative"},"y":{"field":"state_name"},"text":{"field":"state_name"}}
+    },
+    {
+      "transform":[{"filter":"datum.r_asc==1"}],
+      "mark":{"type":"text","dx":8,"dy":12,"fontSize":12},
+      "encoding":{"x":{"field":"pct","type":"quantitative"},"y":{"field":"state_name"},"text":{"field":"state_name"}}
+    }
+  ]
+}
