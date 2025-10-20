@@ -1,17 +1,129 @@
 {
-  "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
-  "width":"container","height":360,
-  "data":{"url":"data/vic-monthly-patronage.csv"},
-  "transform":[
-    {"calculate":"datetime(toNumber(datum.Year), toNumber(datum.Month)-1, 1)","as":"date"},
-    {"fold":["Metropolitan train","Metropolitan tram","Metropolitan bus"],"as":["mode","patronage"]},
-    {"calculate":"toNumber(datum.patronage)","as":"pax"}
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Victorian monthly patronage by mode with an interactive time-range brush (960px wide).",
+
+  "data": { "url": "data/vic-monthly-patronage.csv" },
+
+  "params": [
+    {
+      "name": "modeFilter",
+      "value": "All",
+      "bind": {
+        "input": "select",
+        "options": ["All", "Metropolitan train", "Metropolitan bus", "Metropolitan tram"],
+        "labels": ["All", "Train", "Bus", "Tram"],
+        "name": "Mode: "
+      }
+    }
   ],
-  "mark":{"type":"line","interpolate":"monotone"},
-  "encoding":{
-    "x":{"field":"date","type":"temporal","title":"Month"},
-    "y":{"field":"pax","type":"quantitative","title":"Patronage (boardings)","axis":{"format":"~s"}},
-    "color":{"field":"mode","type":"nominal","title":"Mode"},
-    "tooltip":[{"field":"date","title":"Month","type":"temporal"},{"field":"mode","title":"Mode"},{"field":"pax","title":"Patronage","format":","}]
+
+  "transform": [
+    { "calculate": "datetime(toNumber(datum.Year), toNumber(datum.Month)-1, 1)", "as": "date" },
+    { "filter": "year(datum.date) >= 2018" },
+    { "fold": ["Metropolitan train", "Metropolitan bus", "Metropolitan tram"], "as": ["mode", "patronage"] },
+    { "calculate": "toNumber(datum.patronage)", "as": "pax" },
+    { "filter": "modeFilter === 'All' || datum.mode === modeFilter" }
+  ],
+
+  "vconcat": [
+    {
+      "name": "focus",
+      "width": 1050,
+      "height": 340,
+      "layer": [
+        {
+          "data": { "values": [{ "x0": "2020-03-01", "x1": "2021-12-01" }] },
+          "mark": { "type": "rect", "opacity": 0.12, "color": "#ef4444" },
+          "encoding": {
+            "x": { "field": "x0", "type": "temporal" },
+            "x2": { "field": "x1" },
+            "y": { "value": 0 },
+            "y2": { "value": 340 }
+          }
+        },
+        {
+          "data": { "values": [{ "x": "2020-03-01" }] },
+          "mark": { "type": "rule", "stroke": "#ef4444", "strokeDash": [6, 5], "strokeWidth": 2 },
+          "encoding": { "x": { "field": "x", "type": "temporal" } }
+        },
+        {
+          "data": { "values": [{ "x": "2020-03-01", "label": "COVID-19 shock" }] },
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "baseline": "top",
+            "dx": 6,
+            "dy": 6,
+            "fontSize": 12,
+            "fontWeight": 600,
+            "fill": "#ef4444"
+          },
+          "encoding": {
+            "x": { "field": "x", "type": "temporal" },
+            "y": { "value": 0 },
+            "text": { "field": "label" }
+          }
+        },
+        {
+          "mark": { "type": "line", "interpolate": "monotone", "strokeWidth": 2 },
+          "encoding": {
+            "x": {
+              "field": "date",
+              "type": "temporal",
+              "title": null,
+              "scale": { "domain": { "param": "brush" } },
+              "axis": { "labels": false, "ticks": false }
+            },
+            "y": {
+              "field": "pax",
+              "type": "quantitative",
+              "title": "Patronage (Boardings)",
+              "axis": { "format": "~s" }
+            },
+            "color": {
+              "field": "mode",
+              "type": "nominal",
+              "title": "Mode",
+              "legend": {
+                "orient": "bottom",
+                "direction": "horizontal",
+                "title": null,
+                "symbolType": "circle",
+                "symbolSize": 120,
+                "padding": 10
+              },
+              "scale": {
+                "domain": ["Metropolitan train", "Metropolitan bus", "Metropolitan tram"],
+                "range": ["#00529b", "#187a41", "#e67e22"]
+              }
+            },
+            "tooltip": [
+              { "field": "date", "type": "temporal", "title": "Month" },
+              { "field": "mode", "title": "Mode" },
+              { "field": "pax", "type": "quantitative", "title": "Boardings", "format": "," }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "context",
+      "width": 1050,
+      "height": 70,
+      "mark": { "type": "line", "interpolate": "monotone" },
+      "params": [
+        { "name": "brush", "select": { "type": "interval", "encodings": ["x"] } }
+      ],
+      "encoding": {
+        "x": { "field": "date", "type": "temporal", "title": "Drag to select time range", "axis": { "labelAngle": 0 } },
+        "y": { "field": "pax", "type": "quantitative", "title": null, "axis": { "labels": false, "ticks": false } },
+        "color": { "field": "mode", "type": "nominal", "legend": null }
+      }
+    }
+  ],
+
+  "config": {
+    "view": { "stroke": null },
+    "axis": { "labelFlush": true }
   }
 }

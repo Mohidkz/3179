@@ -1,50 +1,85 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Access vs uptake: infra density vs % using PT (4 states, no UI filters).",
   "width": "container",
-  "height": 360,
-  "data": { "url": "data/pt-infra-density.csv" },
+  "height": 400,
+
+  "data": {
+    "url": "data/pt-infra-density.csv",
+    "format": {
+      "type": "csv",
+      "parse": {
+        "infra_per_100k": "number",
+        "total_stops_01": "number",
+        "erp_2021": "number"
+      }
+    }
+  },
+
   "transform": [
-    { "calculate": "toNumber(datum.infra_per_100k)", "as": "infra" },
     {
       "lookup": "state_name",
       "from": {
-        "data": { "url": "data/au-pt-commuting-2021.csv" },
+        "data": {
+          "values": [
+            { "state_name": "Victoria",          "pt_share": 4.4 },
+            { "state_name": "Queensland",        "pt_share": 4.1 },
+            { "state_name": "South Australia",   "pt_share": 7.4 },
+            { "state_name": "Western Australia", "pt_share": 5.3 }
+          ]
+        },
         "key": "state_name",
-        "fields": ["pct_pt", "total_commuters"]
+        "fields": ["pt_share"]
       }
     },
-    { "calculate": "toNumber(datum.pct_pt)", "as": "pct_num" }
+
+    { "calculate": "toNumber(datum.infra_per_100k)", "as": "xval" },
+    { "calculate": "(isNumber(datum.pt_share) && datum.pt_share <= 1) ? datum.pt_share * 100 : datum.pt_share", "as": "yval" },
+    { "calculate": "datum.state_name", "as": "label" },
+
+    { "filter": "isNumber(datum.xval) && isFinite(datum.xval) && isNumber(datum.yval) && isFinite(datum.yval)" }
   ],
+
   "encoding": {
     "x": {
-      "field": "infra",
+      "field": "xval",
       "type": "quantitative",
       "title": "PT stops/stations per 100,000 residents",
-      "axis": { "format": ".0f" },
-      "scale": { "domain": [220, 520], "nice": false }
+      "axis": { "format": "d" }
     },
     "y": {
-      "field": "pct_num",
+      "field": "yval",
       "type": "quantitative",
       "title": "% using PT",
-      "axis": { "format": ".1f" },
-      "scale": { "domain": [3.5, 7.8], "nice": false }
-    }
-  },
-  "layer": [
-    {
-      "mark": { "type": "point", "filled": true, "size": 220, "stroke": "#0b1220", "strokeWidth": 0.6 },
-      "encoding": {
-        "color": { "field": "state_name", "type": "nominal", "legend": null },
-        "tooltip": [
-          { "field": "state_name" },
-          { "field": "infra", "title": "Infra / 100k", "format": ".1f" },
-          { "field": "pct_num", "title": "% using PT", "format": ".1f" },
-          { "field": "total_commuters", "title": "Total commuters", "format": "," }
-        ]
-      }
+      "axis": { "format": ".1f" }
     },
-    { "transform": [{ "regression": "pct_num", "on": "infra" }], "mark": { "type": "line", "strokeDash": [5, 4] } },
-    { "mark": { "type": "text", "dy": -8, "fontSize": 12 }, "encoding": { "text": { "field": "state_name" } } }
-  ]
+    "color": {
+      "field": "label",
+      "type": "nominal",
+      "legend": { "title": null }
+    },
+    "tooltip": [
+      { "field": "label", "title": "State" },
+      { "field": "xval", "title": "Stops/100k", "format": ".0f" },
+      { "field": "yval", "title": "% using PT", "format": ".1f" }
+    ]
+  },
+
+  "layer": [
+    { "mark": { "type": "point", "filled": true, "size": 110 } },
+    {
+      "mark": {
+        "type": "text",
+        "dy": -10,
+        "fontSize": 12,
+        "fontWeight": 700,
+        "align": "center",
+        "stroke": "#00000080",
+        "strokeWidth": 2
+      },
+      "encoding": { "text": { "field": "label" } }
+    }
+  ],
+
+  "config": { "view": { "stroke": null } }
 }

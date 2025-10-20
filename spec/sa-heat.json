@@ -1,63 +1,47 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Adelaide taps heatmap with filters.",
   "width": "container",
-  "height": 280,
-  "data": { "url": "data/a-validations-2021Q1.csv", "format": { "type": "csv" } },
-  "transform": [
+  "height": 320,
+  "data": { "url": "data/sa-weekday-heat.csv" },
+  "params": [
     {
-      "calculate": "(isValid(datum.VALIDATION_DATE) ? datum.VALIDATION_DATE : (isValid(datum['Validation Date']) ? datum['Validation Date'] : (isValid(datum.validation_date) ? datum.validation_date : (isValid(datum.Date) ? datum.Date : datum.date))))",
-      "as": "rawDate"
+      "name": "weekMax",
+      "value": 52,
+      "bind": { "input": "range", "min": 1, "max": 52, "step": 1, "name": "Up to week: " }
     },
     {
-      "calculate": "isValid(timeParse('%d/%m/%Y', datum.rawDate)) ? timeParse('%d/%m/%Y', datum.rawDate) : (isValid(timeParse('%-d/%-m/%Y', datum.rawDate)) ? timeParse('%-d/%-m/%Y', datum.rawDate) : (isValid(timeParse('%Y-%m-%d', datum.rawDate)) ? timeParse('%Y-%m-%d', datum.rawDate) : toDate(datum.rawDate)))",
-      "as": "dt"
-    },
-    { "filter": "isValid(datum.dt)" },
-    { "timeUnit": "week", "field": "dt", "as": "wk" },
-    { "joinaggregate": [{ "op": "min", "field": "wk", "as": "wkmin" }] },
-    {
-      "calculate": "floor((toNumber(datum.wk) - toNumber(datum.wkmin)) / (1000*60*60*24*7)) + 1",
-      "as": "W"
-    },
-    { "timeUnit": "day", "field": "dt", "as": "dow_num" },
-    {
-      "calculate": "isValid(datum.dow_num) ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][datum.dow_num] : '—'",
-      "as": "dow_name"
+      "name": "weekdayPick",
+      "value": "All",
+      "bind": { "input": "select", "options": ["All","Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "name": "Weekday: " }
     },
     {
-      "calculate": "(isValid(datum.BAND_BOARDINGS_FLOOR) ? toNumber(datum.BAND_BOARDINGS_FLOOR) : (isValid(datum['band_boardings_floor']) ? toNumber(datum['band_boardings_floor']) : (isValid(datum.BOARDINGS) ? toNumber(datum.BOARDINGS) : (isValid(datum.Validations) ? toNumber(datum.Validations) : 0))))",
-      "as": "count_floor"
-    },
-    {
-      "aggregate": [{ "op": "sum", "field": "count_floor", "as": "validations" }],
-      "groupby": ["W", "dow_name"]
+      "name": "zMax",
+      "value": 200000,
+      "bind": { "input": "range", "min": 20000, "max": 300000, "step": 10000, "name": "Color cap: " }
     }
   ],
-  "mark": "rect",
+  "transform": [
+    { "calculate": "toNumber(datum.week)", "as": "week_num" },
+    { "calculate": "toNumber(datum.dow)", "as": "dow_num" },
+    { "calculate": "toNumber(datum.validations)", "as": "taps_num" },
+    { "filter": "datum.week_num <= weekMax" },
+    {
+      "calculate": "datum.dow_num==0 ? 'Mon' : datum.dow_num==1 ? 'Tue' : datum.dow_num==2 ? 'Wed' : datum.dow_num==3 ? 'Thu' : datum.dow_num==4 ? 'Fri' : datum.dow_num==5 ? 'Sat' : 'Sun'",
+      "as": "weekday"
+    },
+    { "filter": "weekdayPick === 'All' || datum.weekday === weekdayPick" }
+  ],
   "encoding": {
-    "x": {
-      "field": "W",
-      "type": "quantitative",
-      "title": "Week (Q1 2021)",
-      "axis": { "tickMinStep": 1, "labelExpr": "'W' + datum.value" }
-    },
-    "y": {
-      "field": "dow_name",
-      "type": "ordinal",
-      "title": "Day of week",
-      "sort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    },
-    "color": {
-      "field": "validations",
-      "type": "quantitative",
-      "title": "Taps (band floors)",
-      "scale": { "scheme": "blues" },
-      "legend": { "format": "~s" }
-    },
+    "x": { "field": "week_num", "type": "ordinal", "title": "Week" },
+    "y": { "field": "weekday", "type": "ordinal", "title": null, "sort": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] },
+    "color": { "field": "taps_num", "type": "quantitative", "title": "Taps", "scale": { "domain": [0, { "expr": "zMax" }] } },
     "tooltip": [
-      { "field": "W", "title": "Week (Q1)", "type": "quantitative" },
-      { "field": "dow_name", "title": "Day" },
-      { "field": "validations", "title": "Taps (band floors)", "type": "quantitative", "format": "," }
+      { "field": "week_num", "title": "Week" },
+      { "field": "weekday", "title": "Weekday" },
+      { "field": "taps_num", "title": "Taps", "format": "," }
     ]
-  }
+  },
+  "mark": { "type": "rect" },
+  "config": { "view": { "stroke": null } }
 }

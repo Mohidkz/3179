@@ -1,0 +1,61 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "National Commuting Mode Share",
+  "width": "container",
+  "height": 280,
+  "data": {"url": "data/au-pt-modes.csv"},
+  "transform": [
+    {"calculate": "toNumber(datum.commuters)", "as": "commuters_num"},
+    {"joinaggregate": [{"op": "sum", "field": "commuters_num", "as": "total"}]},
+    {"calculate": "datum.commuters_num / datum.total", "as": "pct"}
+  ],
+  "encoding": {
+    "y": {
+      "field": "mode",
+      "type": "nominal",
+      "sort": "-x",
+      "title": null,
+      "axis": {"labelFontSize": 12}
+    },
+    "x": {
+      "field": "pct",
+      "type": "quantitative",
+      "title": "Share of National PT Commuters",
+      "axis": {"format": ".0%"}
+    }
+  },
+  "layer": [
+    {
+      "mark": {"type": "bar"},
+      "encoding": {
+        "color": {
+          "field": "mode",
+          "type": "nominal",
+          "legend": null,
+          "scale": {
+            "domain": ["Train", "Bus", "Tram", "Ferry"],
+            "range": ["#00529b", "#187a41", "#e67e22", "#138d75"]
+          }
+        },
+        "tooltip": [
+          {"field": "mode", "title": "Mode"},
+          {"field": "commuters_num", "title": "Commuters", "format": ","},
+          {"field": "pct", "title": "Share", "format": ".1%"}
+        ]
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "baseline": "middle",
+        "dx": 5,
+        "color": "white",
+        "fontWeight": "600"
+      },
+      "encoding": {
+        "text": {"field": "pct", "type": "quantitative", "format": ".1%"}
+      }
+    }
+  ]
+}

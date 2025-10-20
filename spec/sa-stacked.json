@@ -1,26 +1,65 @@
 {
-  "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
-  "width":"container","height":280,
-  "data":{"url":"data/a-validations-2021Q1.csv","format":{"type":"csv"}},
-  "transform":[
-    {"calculate":"(isValid(datum.VALIDATION_DATE) ? datum.VALIDATION_DATE : (isValid(datum['Validation Date']) ? datum['Validation Date'] : (isValid(datum.validation_date) ? datum.validation_date : (isValid(datum.Date) ? datum.Date : datum.date))))","as":"rawDate"},
-    {"calculate":"isValid(timeParse('%d/%m/%Y', datum.rawDate)) ? timeParse('%d/%m/%Y', datum.rawDate) : (isValid(timeParse('%-d/%-m/%Y', datum.rawDate)) ? timeParse('%-d/%-m/%Y', datum.rawDate) : (isValid(timeParse('%Y-%m-%d', datum.rawDate)) ? timeParse('%Y-%m-%d', datum.rawDate) : toDate(datum.rawDate)))","as":"dt"},
-    {"filter":"isValid(datum.dt)"},
-    {"timeUnit":"yearmonth","field":"dt","as":"ym"},
-    {"calculate":"(isValid(datum.NUM_MODE_TRANSPORT) ? datum.NUM_MODE_TRANSPORT : (isValid(datum.NUM_MODE_OF_TRANSPORT) ? datum.NUM_MODE_OF_TRANSPORT : (isValid(datum.mode) ? datum.mode : datum.Mode)))","as":"mraw"},
-    {"calculate":"(datum.mraw==1 ? 'Bus' : (datum.mraw==5 ? 'Train' : (datum.mraw==4 ? 'Tram' : 'Other')))","as":"Mode"},
-    {"calculate":"(isValid(datum.BAND_BOARDINGS_FLOOR) ? toNumber(datum.BAND_BOARDINGS_FLOOR) : (isValid(datum['band_boardings_floor']) ? toNumber(datum['band_boardings_floor']) : (isValid(datum.BOARDINGS) ? toNumber(datum.BOARDINGS) : (isValid(datum.Validations) ? toNumber(datum.Validations) : 0))))","as":"count_floor"},
-    {"aggregate":[{"op":"sum","field":"count_floor","as":"validations"}],"groupby":["ym","Mode"]}
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Adelaide monthly mode mix with interactive filters.",
+  "width": "container",
+  "height": 462,
+  "autosize": { "type": "fit", "contains": "padding" },
+
+  "data": { "url": "data/sa-monthly-mode-share.csv" },
+
+  "params": [
+    {
+      "name": "modeSelect",
+      "select": { "type": "point", "fields": ["mode"] },
+      "bind": "legend"
+    }
   ],
-  "mark":{"type":"bar"},
-  "encoding":{
-    "x":{"field":"ym","type":"temporal","title":"Month (2021 Q1)"},
-    "y":{"field":"validations","type":"quantitative","stack":"normalize","title":"Share of taps (per month)","axis":{"format":".0%"}},
-    "color":{"field":"Mode","type":"nominal","title":"Mode"},
-    "tooltip":[
-      {"field":"ym","title":"Month","type":"temporal"},
-      {"field":"Mode"},
-      {"field":"validations","title":"Taps (band floors)","format":","}
+
+  "transform": [
+    { "calculate": "toDate(datum.month)", "as": "date" }
+  ],
+
+  "mark": { "type": "bar", "cornerRadiusEnd": 3 },
+
+  "encoding": {
+    "x": {
+      "field": "date",
+      "timeUnit": "yearmonth",
+      "type": "ordinal",
+      "title": "Month (2021 Q1)",
+      "axis": { "format": "%b", "labelAngle": 0 },
+      "scale": { "paddingInner": 0.3, "paddingOuter": 0.2 }
+    },
+    "y": {
+      "field": "validations",
+      "type": "quantitative",
+      "stack": "normalize",
+      "title": "Share of Taps",
+      "axis": { "format": ".0%" }
+    },
+    "color": {
+      "field": "mode",
+      "type": "nominal",
+      "scale": {
+        "domain": ["Train", "Bus", "Tram"],
+        "range": ["#00529b", "#187a41", "#e67e22"]
+      },
+      "legend": {
+        "title": "Filter by Mode",
+        "orient": "top",
+        "direction": "horizontal"
+      }
+    },
+    "opacity": {
+      "condition": { "param": "modeSelect", "value": 1 },
+      "value": 0.2
+    },
+    "tooltip": [
+      { "field": "date", "timeUnit": "yearmonth", "title": "Month" },
+      { "field": "mode" },
+      { "field": "validations", "title": "Taps (band floors)", "format": "," }
     ]
-  }
+  },
+
+  "config": { "view": { "stroke": null } }
 }

@@ -1,48 +1,72 @@
-# PT Line — How Australians Commute (DV2)
+The PT Line — An Australian Commuting Story (FIT3179 DV2)
 
-**Author:** Muhammad Mohid Khanzada  
-**Student ID:** 33891095
+Author: Muhammad Mohid Khanzada
+Student ID: 33891095
 
-Public transport commuting & operations in Australia using **Vega-Lite**. This DV2 project is **distinct from DV1**.
+This project is an interactive data story exploring Australian public transport commuting and operational patterns, created using Vega-Lite. It serves as my Data Visualisation 2 submission and is on a distinctly different domain from my DV1 project.
 
-- **DV1 domain:** _[replace with your DV1 topic]_  
-- **DV2 domain:** Public transport commuting & operations (ABS 2021 + VIC patronage + SA validations) with a GTFS-derived infrastructure proxy.
+Project Narrative & Munzner's Framework
 
-## What / Why / How (Munzner)
+The visualisation follows a narrative structure, taking the user from a high-level national overview down to specific operational details, framed as a journey along a metro line.
 
-- **What (Data):**  
-  ABS 2021 MTWP (state % & national mode split), Natural Earth Admin-1 (TopoJSON), GTFS stops by state (deduped via `COALESCE(parent_station, stop_id)` → stops per 100k), VIC monthly patronage (2018–2025), Adelaide Metrocard banded validations (2021 Q1).  
-- **Why (Tasks):**  
-  Compare state PT shares; locate geography; summarise national modes; relate access (stops/100k) to uptake; inspect temporal/weekday usage.  
-- **How (Idioms):**  
-  Lollipop + divergence; choropleth + waffles; donut; scatter + regression; multi-series line; 100% stacked bars; weekday heatmap.
+What (Data): The project synthesises multiple datasets to build a comprehensive picture.
 
-## Live Page
+Commuting Patterns: ABS 2021 Census (Method of Travel to Work) data for state-level percentages and the national mode split.
 
-- Hosted via **GitHub Pages** (Settings → Pages → Source: `main`, root).  
-- All **Vega-Lite JSON** are in `/spec`, data are in `/data`. Each chart links to its spec (“View JSON”).
+Geography: Australian state boundaries from Natural Earth, simplified to TopoJSON format for web performance.
 
-## Data Weight
+Infrastructure Proxy: A derived dataset of public transport stop/station counts per state from publicly available GTFS feeds. This provides a proxy for infrastructure density when combined with ABS Estimated Resident Population (ERP) data.
 
-- Designed to load fast: total downloadable data target < **1 MB**.  
-  If you exceed this, simplify `au-states.json` with mapshaper and trim unused CSV columns, or note tutor approval.
+Operational Data (Victoria): Monthly patronage figures from Public Transport Victoria, showing trends over time.
 
-## Design Process
+Operational Data (South Australia): Anonymised Metrocard validation counts for Q1 2021, revealing daily and weekly usage rhythms.
 
-- **Five Design Sheets (FDS):** scans in `/design/`.  
-- Highlights: early focus on static snapshot → final storyboard spans snapshot → geography → composition → access vs uptake → operations.
+Why (Tasks & Insights): The primary goal is to tell an engaging story that helps an average Australian understand public transport usage patterns across the country. Key tasks for the user include:
 
-## Sources & Licenses (short)
+Compare states to see which have higher or lower PT uptake.
 
-- **ABS Census 2021 (MTWP)** & **ABS ERP Dec-2021** — attribution.  
-- **Natural Earth Admin-1** — public domain.  
-- **GTFS** static feeds: VIC (DataVic), QLD (Translink), SA (data.sa.gov.au), WA (Transperth).  
-- **VIC patronage**: Vic DTP CSV.  
-- **Adelaide validations 2021 Q1**: CC BY (band floors).
+Identify geographic concentrations of PT usage.
 
-## Reproduce
+Understand the composition of the national PT network (i.e., which modes are most common).
 
-1. Open `index.html` directly or serve statically (no build step).  
-2. Ensure `data/au-states.json` TopoJSON `objects` key matches the `"feature"` in `spec/au-pt-map.json` (default: `states`).  
-3. Hard refresh if caching interferes (Ctrl/Cmd+Shift+R).
+Explore the relationship between infrastructure density and actual ridership.
 
+Discover real-world usage patterns through operational data, such as the impact of the pandemic or typical weekday rhythms.
+
+How (Idioms & Enhancements): A range of carefully selected Vega-Lite idioms are used to effectively encode the data.
+
+Comparison: Lollipop and Diverging Bar Charts to rank states and show deviation from the mean.
+
+Geography: A Choropleth Map to show spatial distribution.
+
+Composition: A horizontal Bar Chart for a clear, accessible comparison of national mode share.
+
+Relationship: A Scatter Plot with a regression line and annotated points to explore the link between infrastructure and uptake.
+
+Time-Series & Trends: A Multi-Series Line Chart for Victorian patronage and a Heatmap for Adelaide's weekly tap data.
+
+Part-to-Whole: A 100% Stacked Bar Chart to show the monthly mode mix in Adelaide.
+
+Annotations: Key charts are annotated directly to highlight significant data points (e.g., pandemic impact, outlier states), guiding the user towards insights.
+
+Design & Implementation Notes
+
+Web Performance: All data files have been optimised to keep the total download size under 1MB for a fast user experience. The au-states.json TopoJSON file is simplified, and CSVs contain only necessary columns.
+
+Accessibility & Theming: The design features a high-contrast colour palette that adapts to both light and dark system modes. The typography uses the 'Inter' font for excellent readability. Semantic colours are used consistently for different transport modes across the page and charts.
+
+Live Page: The project is hosted on GitHub Pages. All Vega-Lite specifications are in the /spec directory and data is in /data. Each visualisation includes a button to view the underlying JSON spec.
+
+Design Process: The final design is the result of an iterative process documented in Five Design Sheets (FDS), which are available separately. The narrative evolved from a simple collection of charts to a cohesive, themed story.
+
+Data Sources & Licensing
+
+ABS Census 2021 (MTWP) & ABS ERP Dec-2021: Attribution required.
+
+Natural Earth Admin-1: Public domain.
+
+GTFS Feeds: Sourced from VIC (DataVic), QLD (Translink), SA (data.sa.gov.au), WA (Transperth).
+
+Victorian Patronage: Vic DTP “Monthly public transport patronage by mode” CSV.
+
+Adelaide Validations 2021 Q1: CC BY licence.

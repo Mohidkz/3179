@@ -1,0 +1,89 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Mode share pictogram (centered facets with per-mode nudges).",
+  "data": { "url": "data/au-pt-modes.csv" },
+  "transform": [
+    { "calculate": "toNumber(datum.commuters)", "as": "commuters_num" },
+    { "joinaggregate": [{ "op": "sum", "field": "commuters_num", "as": "total" }] },
+    { "calculate": "datum.commuters_num / datum.total", "as": "pct" },
+    { "calculate": "max(1, round(datum.pct * 10))", "as": "filled" },
+    { "filter": "datum.mode != 'Ferry'" },
+    { "calculate": "indexof(['Train','Bus','Tram'], datum.mode)", "as": "mode_order" },
+    { "calculate": "datum.mode=='Train' ? 'img/train-filled.svg' : (datum.mode=='Bus' ? 'img/bus-filled.svg' : 'img/tram-filled.svg')", "as": "iconFilled" },
+    { "calculate": "datum.mode=='Train' ? 'img/train-empty.svg' : (datum.mode=='Bus' ? 'img/bus-empty.svg' : 'img/tram-empty.svg')", "as": "iconEmpty" },
+
+    { "calculate": "datum.mode=='Bus' ? -40 : (datum.mode=='Tram' ? 8 : 0)", "as": "xNudge" }
+  ],
+  "facet": {
+    "field": "mode",
+    "columns": 3,
+    "sort": { "field": "mode_order", "order": "ascending" },
+    "spacing": 24,
+    "header": {
+      "title": null,
+      "labelExpr": "datum.value=='Tram' ? 'Tram/Light rail' : datum.value",
+      "labelFontSize": 16,
+      "labelFontWeight": 700,
+      "labelAlign": "center",
+      "labelPadding": 10
+    }
+  },
+  "spec": {
+    "width": 300,
+    "height": 160,
+    "transform": [
+      { "flatten": [{ "expr": "sequence(0, 10)" }], "as": "i" },
+      { "calculate": "floor(datum.i/5)", "as": "row" },
+      { "calculate": "datum.i%5", "as": "col" },
+      { "calculate": "datum.i < datum.filled ? 'Filled' : 'Empty'", "as": "cellState" }
+    ],
+    "layer": [
+      {
+        "mark": { "type": "image", "width": 64, "height": 40 },
+        "encoding": {
+          "x": {
+            "field": "col",
+            "type": "ordinal",
+            "axis": null,
+            "scale": {
+              "domain": [0, 1, 2, 3, 4],
+              "paddingInner": 0.08,
+              "paddingOuter": 0.28  
+            }
+          },
+          "y": {
+            "field": "row",
+            "type": "ordinal",
+            "axis": null,
+            "scale": {
+              "domain": [0, 1],
+              "paddingInner": 0.18,
+              "paddingOuter": 0.34
+            }
+          },
+          "url": {
+            "condition": [{ "test": "datum.cellState === 'Filled'", "field": "iconFilled" }],
+            "field": "iconEmpty"
+          },
+          "xOffset": { "field": "xNudge" },
+          "tooltip": [
+            { "field": "mode", "title": "Mode" },
+            { "field": "commuters_num", "title": "Commuters", "format": "," },
+            { "field": "pct", "title": "Share", "format": ".1%" }
+          ]
+        }
+      },
+      {
+        "transform": [{ "aggregate": [{ "op": "max", "field": "pct", "as": "pct_label" }] }],
+        "mark": { "type": "text", "fontSize": 14, "fontWeight": 700, "align": "center", "baseline": "top" },
+        "encoding": {
+          "x": { "value": 150 },  
+          "y": { "value": 156 },
+          "text": { "field": "pct_label", "format": ".1%" },
+          "color": { "value": "#9aa4b2" }
+        }
+      }
+    ]
+  },
+  "config": { "view": { "stroke": null }, "legend": { "disable": true } }
+}

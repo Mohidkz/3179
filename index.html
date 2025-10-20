@@ -2,296 +2,533 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>PT Line — How Australians Commute (ABS 2021 + State Sources)</title>
+  <title>The PT Line — An Australian Commuting Story</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="A data-driven journey through Australia's public transport: where people ride, why uptake varies, and what operations reveal." />
   <meta name="author" content="Muhammad Mohid Khanzada (ID: 33891095)">
+
+  <!-- Vega-Lite -->
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      /* Transit theme (light) */
-      --bg:#f6f8fb; --card:#ffffff; --ink:#0b1220; --muted:#526071; --grid:#d9e1ea;
-      --rail:#0b5fff;  /* train */
-      --bus:#16a34a;   /* bus  */
-      --tram:#f59e0b;  /* tram */
-      --ferry:#14b8a6; /* ferry */
-      --accent:#7c3aed;
-      --ocean:#e6f1fb;
-      --pill-bg:#eef2f7; --pill-fg:#0b1220; --pill-br:#cfd7e3;
+    
+  /* ================================
+     Theme tokens (light & dark)
+  ==================================*/
+  :root {
+    /* Surfaces */
+    --bg: #f8f9fa;
+    --card-bg: #ffffff;
+
+    /* Text */
+    --text-primary: #0f172a;        /* slate-900 */
+    --text-secondary: #334155;      /* slate-700 (stronger than before for contrast) */
+
+    /* Lines / borders / shadows */
+    --border-color: #cbd5e1;        /* slate-300 */
+    --border-color-translucent: rgba(148, 163, 184, .35);
+    --shadow-color: rgba(15, 23, 42, .08);
+
+    /* Brand accents (used in badges/lines) */
+    --rail: #00529b;
+    --bus: #187a41;
+    --tram: #e67e22;
+    --accent: #8e44ad;
+
+    /* Links (AA on light bg) */
+    --link: #0b63d1;
+    --link-hover: #084b9e;
+    --link-visited: #6b2fb8;
+
+    /* Focus ring */
+    --focus-ring: #2563eb66;
+
+    /* Muted chips */
+    --muted-chip: #eaf0f7;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111317;
+      --card-bg: #171a21;
+
+      --text-primary: #e6eef9;        /* near-White */
+      --text-secondary: #c6d0de;      /* lighter than before for legibility on dark */
+
+      --border-color: #2a3240;
+      --border-color-translucent: rgba(82, 94, 118, .45);
+      --shadow-color: rgba(0, 0, 0, .35);
+
+      --rail: #9ec5ff;
+      --bus: #81c995;
+      --tram: #fdd663;
+      --accent: #d2b3ff;
+
+      --link: #9ec5ff;                /* AA on #111317 */
+      --link-hover: #cfe3ff;
+      --link-visited: #d3b3ff;
+
+      --focus-ring: #60a5fa66;
+
+      --muted-chip: #202632;
     }
-    @media (prefers-color-scheme: dark){
-      :root{
-        /* Transit theme (dark) */
-        --bg:#0b1220; --card:#0f172a; --ink:#e6eef9; --muted:#b6c2d0; --grid:#263449;
-        --rail:#7aa7ff; --bus:#4ade80; --tram:#fbbf24; --ferry:#5eead4; --accent:#a78bfa;
-        --ocean:#0c2135;
-        --pill-bg:#152238; --pill-fg:#e6eef9; --pill-br:#2b3b53;
-      }
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,Segoe UI,Roboto,Arial,sans-serif;scroll-behavior:smooth}
-    .wrap{max-width:1080px;margin:0 auto;padding:24px 16px 56px}
-    header{margin-bottom:14px;position:relative}
-    h1{margin:0 0 8px;font-size:28px;letter-spacing:.2px}
-    .lede{color:var(--muted);max-width:72ch;margin:0 0 12px;font-size:16px}
-    .station{background:var(--card);border:1px solid var(--grid);border-radius:16px;padding:18px 18px 14px;margin:18px 0}
-    .station h2{margin:0 0 8px;font-size:20px;display:flex;gap:8px;align-items:center}
-    .grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-    figure{margin:8px 0 2px}
-    .span6{grid-column:span 6}.span12{grid-column:span 12}
-    .vis{width:100%}
-    figcaption{color:var(--muted);font-size:14px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-    .line{position:relative;display:flex;gap:18px;align-items:center;overflow:hidden;padding:14px 12px;background:var(--card);border:1px solid var(--grid);border-radius:14px}
-    .line:before{content:"";position:absolute;left:48px;right:12px;top:50%;height:4px;background:var(--rail);transform:translateY(-50%);border-radius:999px}
-    .stop{position:relative;display:flex;align-items:center;gap:10px;z-index:1}
-    .badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--rail);color:#fff;font-weight:700;font-size:12px;border:2px solid #fff;box-shadow:0 0 0 2px var(--rail)}
-    .label{font-size:14px}.label small{color:var(--muted)}
-    .line .stop:nth-child(3) .badge{background:var(--bus);box-shadow:0 0 0 2px var(--bus)}
-    .line .stop:nth-child(4) .badge{background:var(--tram);box-shadow:0 0 0 2px var(--tram)}
-    .line .stop:nth-child(5) .badge{background:var(--ferry);box-shadow:0 0 0 2px var(--ferry)}
-    .line .stop:last-child .badge{background:var(--accent);color:#121212;box-shadow:0 0 0 2px var(--accent)}
-    .hr{height:1px;background:var(--grid);margin:18px 0}
-    .next{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-weight:700;color:var(--rail);text-decoration:none}
-    .next:hover{text-decoration:underline}
-    details.footer{margin-top:10px;font-size:13px;color:var(--muted)}
-    .note{font-size:13px;color:var(--muted)}
-    .body{color:var(--muted);max-width:75ch;margin:6px 0 2px}
-    .jsonbtn{
-      display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--pill-br);
-      background:var(--pill-bg); color:var(--pill-fg); font-size:12px; text-decoration:none; font-weight:600; line-height:1;
-    }
-    .jsonbtn:hover{filter:brightness(1.05)}
-    .jsonbtn:focus{outline:3px solid color-mix(in oklab, var(--rail), transparent 60%); outline-offset:2px}
-    /* subtle “route striping” under header */
-    .route-bg{position:absolute;inset:auto 0 -10px 0;height:8px;background:
-      linear-gradient(90deg,var(--rail) 0 25%, var(--bus) 25% 50%, var(--tram) 50% 75%, var(--ferry) 75% 100%);
-      border-radius:99px;opacity:.25}
-  </style>
+  }
+
+  /* ================================
+     Base
+  ==================================*/
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Noto Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* subtle blueprint grid */
+    background-image:
+      linear-gradient(var(--border-color-translucent) 1px, transparent 1px),
+      linear-gradient(to right, var(--border-color-translucent) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 36px 24px 72px;
+    background: var(--bg);
+  }
+
+  /* ================================
+     Typography
+  ==================================*/
+  h1, h2 {
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+    color: var(--text-primary);
+  }
+  h1 {
+    font-size: clamp(30px, 4.2vw, 42px);
+    letter-spacing: -0.3px;
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-size: clamp(20px, 3vw, 26px);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 svg {
+    width: 26px;
+    height: 26px;
+    color: var(--text-secondary);
+    flex: 0 0 auto;
+  }
+
+  .lede {
+    font-size: 1.08rem;
+    color: var(--text-secondary);
+    max-width: 85ch;
+    margin: 0 0 20px;
+  }
+  p.body {
+    color: var(--text-secondary);
+    max-width: 90ch;
+    margin: 8px 0 16px;
+  }
+
+  header { margin-bottom: 24px; }
+
+  /* ================================
+     Links (high-contrast + focus)
+  ==================================*/
+  a, .body a, figcaption a {
+    color: var(--link);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  a:hover, .body a:hover, figcaption a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  a:visited, .body a:visited, figcaption a:visited {
+    color: var(--link-visited);
+  }
+  a:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* “Next stop …” links styled like subtle buttons while remaining links */
+  .body a {
+    padding: 2px 8px;
+    border-radius: 8px;
+    box-shadow: 0 0 0 1px var(--border-color) inset;
+    display: inline-block;
+  }
+  .body a:hover {
+    box-shadow: 0 0 0 2px var(--border-color) inset;
+  }
+
+  /* ================================
+     Cards / Stations
+  ==================================*/
+  .station {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px;
+    margin: 28px 0;
+    box-shadow: 0 8px 22px var(--shadow-color);
+    transition: box-shadow .25s ease;
+  }
+  .station:hover { box-shadow: 0 12px 30px var(--shadow-color); }
+
+  /* ================================
+     Metro line nav
+  ==================================*/
+  .metro-line-nav {
+    position: relative;
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    overflow: auto;
+    padding: 1.1rem 1rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px var(--shadow-color);
+    margin-top: 1.2rem;
+  }
+  .metro-line-nav::before {
+    content: "";
+    position: absolute;
+    left: 3.2rem;
+    right: 1rem;
+    top: 50%;
+    height: 4px;
+    background: var(--rail);
+    transform: translateY(-50%);
+    border-radius: 999px;
+    z-index: 0;
+  }
+  .line-stop { position: relative; display: flex; align-items: center; gap: .8rem; z-index: 1; flex-shrink: 0; }
+  .stop-badge {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--rail); color: #fff; font-weight: 700; font-size: .82rem;
+    border: 3px solid var(--card-bg);
+    box-shadow: 0 0 0 3px var(--rail);
+  }
+  .stop-label { font-size: .95rem; font-weight: 700; color: var(--text-primary); }
+  .stop-label small { display: block; line-height: 1.1; color: var(--text-secondary); font-weight: 500; }
+
+  .line-stop:nth-child(2) .stop-badge { background: var(--bus); box-shadow: 0 0 0 3px var(--bus); }
+  .line-stop:nth-child(3) .stop-badge { background: var(--tram); box-shadow: 0 0 0 3px var(--tram); }
+  .line-stop:nth-child(4) .stop-badge { background: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
+
+  /* ================================
+     Grid
+  ==================================*/
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 26px; }
+  .col-6 { grid-column: span 12; }
+  @media (min-width: 900px) { .col-6 { grid-column: span 6; } }
+
+  /* ================================
+     Figures & Visual containers
+  ==================================*/
+  figure { margin: 0; }
+  .vis-container {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    background: var(--bg);
+    overflow: visible;        /* let legends/labels render fully */
+  }
+  .vis-inner { width: 100%; }
+
+  figcaption {
+    color: var(--text-secondary);
+    font-size: .92rem;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    display: inline-block;
+    background: var(--muted-chip);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: .25rem .6rem;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .01em;
+  }
+
+  /* ================================
+     Reduced motion
+  ==================================*/
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  }
+</style>
+
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>PT Line — How Australians Commute</h1>
+      <h1>The PT Line — An Australian Commuting Story</h1>
       <p class="lede">
-        A transport-themed storyline: snapshot (ABS 2021 MTWP), geography, national mode split, infrastructure vs uptake, plus <strong>operational views</strong> — Victoria monthly patronage and Adelaide smartcard validations.
+        A guided analysis of Australia’s public-transport commute. We begin with a national snapshot, examine where and what people ride, test whether access predicts use, and conclude with operational evidence from Victoria and Adelaide.
       </p>
-      <div class="line" aria-label="Journey steps">
-        <div class="stop"><div class="badge">1</div><div class="label">Compare<br><small>% using PT</small></div></div>
-        <div class="stop"><div class="badge">2</div><div class="label">Map<br><small>Where uptake concentrates</small></div></div>
-        <div class="stop"><div class="badge">3</div><div class="label">Modes<br><small>National split</small></div></div>
-        <div class="stop"><div class="badge">4</div><div class="label">Infra ↔ Uptake<br><small>Access vs share</small></div></div>
-        <div class="stop"><div class="badge">5</div><div class="label">Ops: VIC & SA<br><small>Monthly use & taps</small></div></div>
-        <div class="stop"><div class="badge">6</div><div class="label">Takeaways<br><small>What to remember</small></div></div>
-      </div>
-      <div class="route-bg" aria-hidden="true"></div>
+
+      <nav class="metro-line-nav" aria-label="Story stops">
+        <div class="line-stop"><div class="stop-badge">1</div><div class="stop-label">State of Play<small>Who leads, who lags?</small></div></div>
+        <div class="line-stop"><div class="stop-badge">2</div><div class="stop-label">National Picture<small>Modes &amp; geography</small></div></div>
+        <div class="line-stop"><div class="stop-badge">3</div><div class="stop-label">Access vs Action<small>Infrastructure &amp; uptake</small></div></div>
+        <div class="line-stop"><div class="stop-badge">4</div><div class="stop-label">Ops Pulse<small>VIC &amp; SA</small></div></div>
+        <div class="line-stop"><div class="stop-badge">5</div><div class="stop-label">Takeaways<small>What to remember</small></div></div>
+      </nav>
     </header>
 
     <!-- Station 1 -->
     <section class="station" id="st1">
-      <h2>🚇 Station 1 — State Comparison</h2>
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V5m8 14V5m8 14V5"/></svg>
+        <span>Station 1 — State of Play</span>
+      </h2>
       <p class="body">
-        Snapshot: what share of employed people used public transport to get to work in 2021? The lollipop ranks the states; the diverging bars show how far each sits above/below the national average.
+        The Census reveals a pronounced split across states. Rail-anchored metros (NSW, VIC) sustain markedly higher commuting by public transport, while more dispersed states trail. The lollipop establishes the ranking; the diverging bars quantify deviation from the national average.
       </p>
-      <div class="grid12">
-        <figure class="span6">
-          <div id="vis-lollipop" class="vis" aria-label="Lollipop ranking"></div>
-          <figcaption>
-            <span>Lollipop ranking — % of employed commuters using PT (ABS 2021 MTWP).</span>
-            <a class="jsonbtn" href="spec/lollipop.json">View JSON</a>
-          </figcaption>
+      <div class="grid">
+        <figure class="col-6">
+          <div class="vis-container"><div id="vis-lollipop" class="vis-inner" aria-label="Lollipop ranking by % using public transport"></div></div>
+          <figcaption><span>Ranking by PT share underscores the dominance of NSW and Victoria relative to smaller, less rail-intensive states.</span><span class="chip">2021 Census</span></figcaption>
         </figure>
-        <figure class="span6">
-          <div id="vis-diverge" class="vis" aria-label="Deviation from national average"></div>
-          <figcaption>
-            <span>Deviation from national average (percentage points).</span>
-            <a class="jsonbtn" href="spec/diverge.json">View JSON</a>
-          </figcaption>
+        <figure class="col-6">
+          <div class="vis-container"><div id="vis-diverge" class="vis-inner" aria-label="Diverging bars relative to national average"></div></div>
+          <figcaption><span>Deviation from the national mean, in percentage points, makes over- and under-performance unambiguous.</span><span class="chip">vs. national mean</span></figcaption>
         </figure>
       </div>
-      <a class="next" href="#st2">Next stop → Map</a>
+      <p class="body"><a href="#st2">Next stop: National Picture →</a></p>
     </section>
 
     <!-- Station 2 -->
     <section class="station" id="st2">
-      <h2>🗺️ Station 2 — Geography & Magnitude</h2>
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.567 3-3.5S13.657 4 12 4 9 5.567 9 7.5 10.343 11 12 11z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 20.5c0-2.761-3.358-5-7.5-5s-7.5 2.239-7.5 5"/></svg>
+        <span>Station 2 — The National Picture</span>
+      </h2>
       <p class="body">
-        Uptake clusters in the big, rail-served metros along the coast. The choropleth shows geography; the waffle multiples translate percentages into people: “out of 100 workers, how many used PT?”
+        <strong>Mode mix.</strong> Trains carry the largest share of commuters; buses extend coverage; trams offer targeted urban capacity. The pictogram converts proportions into ten filled tiles per mode for instant comprehension.<br>
+        <strong>Geography.</strong> Uptake concentrates along the south-east corridor—especially Sydney and Melbourne—where heavy rail is most extensive.
       </p>
-      <div class="grid12">
-        <figure class="span12">
-          <div id="vis-map" class="vis" aria-label="Choropleth map"></div>
-          <figcaption>
-            <span>% using PT by state (same metric as Station 1).</span>
-            <a class="jsonbtn" href="spec/au-pt-map.json">View JSON</a>
-          </figcaption>
-        </figure>
-        <figure class="span12">
-          <div id="vis-waffles" class="vis" aria-label="Waffle multiples"></div>
-          <figcaption>
-            <span>Waffle small-multiples — out of 100 employed people, how many used PT?</span>
-            <a class="jsonbtn" href="spec/waffles.json">View JSON</a>
-          </figcaption>
-        </figure>
-      </div>
-      <a class="next" href="#st3">Next stop → Modes</a>
+      <figure style="margin-bottom: 22px;">
+        <div class="vis-container"><div id="vis-modes-pictogram" class="vis-inner" aria-label="Pictogram of national mode share"></div></div>
+        <figcaption><span>Ten-slot tiles summarise national mode proportions: trains dominate; buses are next; trams contribute a smaller but meaningful share.</span></figcaption>
+      </figure>
+      <figure>
+        <div class="vis-container"><div id="vis-map" class="vis-inner" aria-label="Choropleth map: % using PT by state"></div></div>
+        <figcaption><span>Spatial concentration aligns with rail availability: higher PT share in NSW and VIC; lower levels elsewhere.</span></figcaption>
+      </figure>
+      <p class="body"><a href="#st3">Next stop: Access vs Action →</a></p>
     </section>
 
     <!-- Station 3 -->
     <section class="station" id="st3">
-      <h2>🚉 Station 3 — What We Rode (National)</h2>
-      <p class="body">Trains take the biggest slice nationally, followed by buses; trams and ferries are smaller but vital in specific cities.</p>
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 17l6-6 4 4 7-7"/></svg>
+        <span>Station 3 — Access vs Action</span>
+      </h2>
+      <p class="body">
+        Infrastructure breadth correlates with usage: states with more stops and stations per capita tend to record higher PT shares. Outliers show that frequency, reliability and integration convert access into habitual commuting.
+      </p>
       <figure>
-        <div id="vis-pie" class="vis" aria-label="Donut mode split"></div>
-        <figcaption>
-          <span>ABS 2021 MTWP national mode split.</span>
-          <a class="jsonbtn" href="spec/pie.json">View JSON</a>
-        </figcaption>
+        <div class="vis-container"><div id="vis-scatter" class="vis-inner" aria-label="Scatter: infrastructure density vs PT use"></div></div>
+        <figcaption><span>A positive association exists between access and uptake; deviations highlight where service quality or land-use patterns mediate outcomes.</span></figcaption>
       </figure>
-      <a class="next" href="#st4">Next stop → Infrastructure & Uptake</a>
+      <p class="body"><a href="#st4">Next stop: Operational Pulse →</a></p>
     </section>
 
     <!-- Station 4 -->
     <section class="station" id="st4">
-      <h2>🧭 Station 4 — Does Infrastructure Density Relate to Uptake?</h2>
-      <p class="body">Access matters: states with more stops/stations per 100k people generally show higher PT shares. The dashed line summarises the association (descriptive, not causal).</p>
-      <figure>
-        <div id="vis-scatter" class="vis" aria-label="Scatter infra vs uptake"></div>
-        <figcaption>
-          <span>Stops filtered (location_type 0/blank/1), deduped by <code>COALESCE(parent_station, stop_id)</code>; scaled by ABS ERP × 100,000.</span>
-          <a class="jsonbtn" href="spec/scatter.json">View JSON</a>
-        </figcaption>
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h3l3 9 6-18 3 9h3"/></svg>
+        <span>Station 4 — Operational Pulse</span>
+      </h2>
+      <p class="body">
+        Time-series and validations ground the snapshot in operation. In <strong>Victoria</strong>, monthly patronage shows the pandemic shock and uneven recovery across modes. In <strong>Adelaide</strong>, taps reveal a pronounced weekday rhythm, with buses shouldering the majority of trips.
+      </p>
+      <figure style="margin-bottom: 22px;">
+        <div class="vis-container"><div id="vis-vic-lines" class="vis-inner" aria-label="Line chart: Victoria monthly patronage"></div></div>
+        <figcaption><span>Shock, stabilisation, gradual return: trajectories differ by mode, reflecting distinct roles in the network.</span></figcaption>
       </figure>
-      <figure>
-        <div id="vis-infra" class="vis" aria-label="Infra ranking"></div>
-        <figcaption>
-          <span>Stops/stations per 100k (ranking) — availability proxy.</span>
-          <a class="jsonbtn" href="spec/infra-bars.json">View JSON</a>
-        </figcaption>
-      </figure>
-      <a class="next" href="#st5">Next stop → VIC & SA operations</a>
+      <div class="grid">
+        <figure class="col-6">
+          <div class="vis-container"><div id="vis-sa-stacked" class="vis-inner" aria-label="Stacked bars: Adelaide mode mix"></div></div>
+          <figcaption><span>Mode composition in early 2021 is bus-led, with rail and tram providing complementary capacity.</span></figcaption>
+        </figure>
+        <figure class="col-6">
+          <div class="vis-container"><div id="vis-sa-heat" class="vis-inner" aria-label="Heatmap: Adelaide taps by weekday/week"></div></div>
+          <figcaption><span>Commuting cadence: strong Monday–Friday peaks with lighter weekends reflect work-oriented demand.</span></figcaption>
+        </figure>
+      </div>
+      <p class="body"><a href="#st5">Final stop: Takeaways →</a></p>
     </section>
 
     <!-- Station 5 -->
     <section class="station" id="st5">
-      <h2>🚌 Station 5 — Operational Views: VIC & SA</h2>
-      <p class="body"><strong>Victoria:</strong> monthly boardings show the pandemic shock and recovery by mode. <strong>Adelaide:</strong> smartcard taps (band-floor counts) reveal a bus-led mix and a weekday rhythm in early 2021.</p>
-      <figure>
-        <div id="vis-vic-lines" class="vis" aria-label="Victoria monthly patronage"></div>
-        <figcaption>
-          <span><strong>Victoria monthly patronage (2018–2025)</strong> — Metropolitan train, tram, bus.</span>
-          <a class="jsonbtn" href="spec/vic-lines.json">View JSON</a>
-        </figcaption>
-      </figure>
-      <div class="grid12">
-        <figure class="span6">
-          <div id="vis-sa-stacked" class="vis" aria-label="Adelaide validations by mode (share)"></div>
-          <figcaption>
-            <span><strong>Adelaide mode mix (2021 Q1)</strong> — 100% stacked: each bar shows the <em>share</em> of taps by mode per month (Bus / Train / Tram).</span>
-            <a class="jsonbtn" href="spec/sa-stacked.json">View JSON</a>
-          </figcaption>
-        </figure>
-        <figure class="span6">
-          <div id="vis-sa-heat" class="vis" aria-label="Adelaide weekday heatmap (weeks W1–W13)"></div>
-          <figcaption>
-            <span><strong>Adelaide taps by weekday</strong> — columns are <em>weeks W1–W13</em> (Jan–Mar 2021), rows are <em>Mon–Sun</em>; darker = more taps.</span>
-            <a class="jsonbtn" href="spec/sa-heat.json">View JSON</a>
-          </figcaption>
-        </figure>
-      </div>
-      <a class="next" href="#st6">Final stop → Takeaways</a>
-    </section>
-
-    <div class="hr" role="separator"></div>
-
-    <!-- Station 6 -->
-    <section class="station" id="st6">
-      <h2>✅ Station 6 — Key Takeaways</h2>
-      <ul class="note" style="margin:6px 0 0 18px">
-        <li>States with large rail-served metros show higher PT shares; dispersed regions trail.</li>
-        <li>Trains lead nationally; buses follow; trams/ferries are city-specific.</li>
-        <li>Higher stop density tends to align with higher PT uptake (association).</li>
-        <li>VIC recovery is visible in monthly patronage; SA shows a weekday-heavy rhythm and bus-led mix.</li>
-        <li><strong>Innovation:</strong> Census snapshot + GTFS-derived infrastructure density + two operational feeds in one storyline.</li>
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span>Station 5 — Key Takeaways</span>
+      </h2>
+      <ul class="body" style="margin:6px 0 0 18px;padding-left:18px">
+        <li><strong>Rail-centred metros set the pace.</strong> NSW and Victoria convert metropolitan rail into materially higher PT commuting shares.</li>
+        <li><strong>Trains dominate, buses extend reach.</strong> The national mix reflects trunk capacity on rail with buses providing coverage.</li>
+        <li><strong>Access is a prerequisite; service makes it stick.</strong> Stop density aligns with uptake, but frequency, reliability, and integration are decisive.</li>
+        <li><strong>Operations validate the story.</strong> Time-series and tap patterns show shocks, recovery, and weekday cadence in practice.</li>
       </ul>
 
-      <details class="footer">
-        <summary>Sources & licences</summary>
-        <ul>
-          <li>ABS Census 2021 — Method of Travel to Work (MTWP); ABS ERP Dec-2021 (attribution required).</li>
-          <li>Natural Earth Admin-1 (public domain) → TopoJSON.</li>
-          <li>GTFS stops: VIC (DataVic), QLD (Translink), SA (data.sa.gov.au), WA (Transperth).</li>
-          <li>Victoria monthly patronage: Vic DTP “Monthly public transport patronage by mode” (CSV).</li>
-          <li>Adelaide Metrocard validations 2021 Q1 (CC BY), band floors.</li>
-        </ul>
-        <p class="note">Hosted on GitHub Pages. All <a href="spec/">Vega-Lite JSON specs</a> and <a href="data/">data files</a> are in this repo.</p>
-      </details>
-
-      <p class="note" style="margin-top:12px">
-        <strong>Author:</strong> Muhammad Mohid Khanzada (ID: 33891095) •
-        <strong>Last updated:</strong> <span id="updated"></span>
+      <p class="body" style="margin-top:12px">
+        <strong>Author:</strong> Muhammad Mohid Khanzada (ID: 33891095) &nbsp;•&nbsp;
+        <strong>Last Updated:</strong> <time id="updated-date"></time>
       </p>
-      <a class="next" href="#st1">Back to Station 1 ↑</a>
+      <p class="body"><a href="#">↑ Back to top</a></p>
     </section>
   </div>
 
   <script>
-    // Inject a transit-themed Vega-Lite config so axes/titles are readable in both light and dark modes.
-    const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
-    const ui = {
-      text:       getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || (isDark ? '#e6eef9' : '#0b1220'),
-      muted:      getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || (isDark ? '#b6c2d0' : '#526071'),
-      rule:       isDark ? '#43556d' : '#8aa0b6',
-      grid:       getComputedStyle(document.documentElement).getPropertyValue('--grid').trim() || (isDark ? '#263449' : '#e5e9ef'),
-      rail:       getComputedStyle(document.documentElement).getPropertyValue('--rail').trim() || '#0b5fff',
-      bus:        getComputedStyle(document.documentElement).getPropertyValue('--bus').trim() || '#16a34a',
-      tram:       getComputedStyle(document.documentElement).getPropertyValue('--tram').trim() || '#f59e0b',
-      ferry:      getComputedStyle(document.documentElement).getPropertyValue('--ferry').trim() || '#14b8a6',
-      accent:     getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7c3aed',
-      water:      getComputedStyle(document.documentElement).getPropertyValue('--ocean').trim() || (isDark ? '#0b2233' : '#e6f0f8')
-    };
+  // ===== Theme (unchanged) =====
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const vlTheme = {
+    background: 'transparent',
+    view: { stroke: null },
+    font: 'Inter',
+    axis: {
+      labelColor: cssVar('--text-secondary'),
+      titleColor: cssVar('--text-primary'),
+      gridColor: cssVar('--border-color'),
+      domainColor: cssVar('--border-color'),
+      tickColor: cssVar('--border-color'),
+      labelFontSize: 12, titleFontSize: 14, titleFontWeight: 600, labelPadding: 6, titlePadding: 16
+    },
+    legend: { labelColor: cssVar('--text-secondary'), titleColor: cssVar('--text-primary'), titleFontWeight: 600, labelFontSize: 12 },
+    title:  { color: cssVar('--text-primary'), fontSize: 18, fontWeight: 600, anchor: 'start', dy: -14 },
+    header: { labelColor: cssVar('--text-primary'), titleColor: cssVar('--text-primary') },
+    text:   { color: cssVar('--text-secondary') }
+  };
 
-    const vlTheme = {
-      background: null,
-      view: { stroke: null },
-      axis: {
-        labelColor: ui.text,
-        titleColor: ui.text,
-        gridColor: ui.grid,
-        domainColor: ui.rule,
-        tickColor: ui.rule
-      },
-      legend: { labelColor: ui.text, titleColor: ui.text },
-      mark: { color: ui.rail },
-      range: {
-        category: [ui.rail, ui.bus, ui.tram, ui.ferry, ui.accent, "#60a5fa", "#34d399", "#fde047"]
+  // --- Center EVERY facet by equalizing left/right gaps of the icon grid ---
+  function centerAllPictogramFacets(svg) {
+    // Candidate facet groups: any <g> that directly contains <image> marks (our icons).
+    // We also ignore legend/layout groups by requiring "enough" images (>=6).
+    const candidates = Array.from(svg.querySelectorAll('g.mark-group, g.role-plot, g.cell, g'))
+  .filter(g => g.querySelectorAll('image').length >= 6);
+
+
+    candidates.forEach(g => {
+      const gBox = g.getBoundingClientRect();
+      const imgs = Array.from(g.querySelectorAll('image'));
+      if (!imgs.length) return;
+
+      let minL = Infinity, maxR = -Infinity;
+      for (const im of imgs) {
+        const b = im.getBoundingClientRect();
+        if (b.width === 0) continue;
+        if (b.left  < minL) minL = b.left;
+        if (b.right > maxR) maxR = b.right;
       }
-    };
+      if (!isFinite(minL) || !isFinite(maxR)) return;
 
-    async function draw(id, url){
-      const res = await fetch(url);
-      if(!res.ok){ throw new Error(`Failed to load ${url}`); }
-      const spec = await res.json();
-      spec.config = Object.assign({}, spec.config||{}, vlTheme);
-      await vegaEmbed(id, spec, {actions:false});
+      const leftGap  = minL - gBox.left;
+      const rightGap = gBox.right - maxR;
+      const delta = (rightGap - leftGap) / 2; // + right, - left
+
+      if (Math.abs(delta) >= 0.5) {
+        const t = g.getAttribute('transform') || '';
+        g.setAttribute('transform', `${t} translate(${delta},0)`);
+      }
+    });
+  }
+
+  async function embedVL(id, url) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+      const spec = await r.json();
+      spec.config = { ...spec.config, ...vlTheme };
+
+      // Use SVG for pictogram so we can adjust the DOM; others can be canvas
+      const useSvg = id === 'vis-modes-pictogram';
+      const result = await vegaEmbed('#' + id, spec, { actions: false, renderer: useSvg ? 'svg' : 'canvas' });
+
+      if (useSvg) {
+        const svg = result.view.container().querySelector('svg');
+        if (svg) {
+          // After layout, center every facet’s icon grid
+          requestAnimationFrame(() => centerAllPictogramFacets(svg));
+        }
+      }
+    } catch (e) {
+      console.error(`Embed failed [${id}]`, e);
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `<p style="color:#e11d48;text-align:center">Could not load: ${e.message}</p>`;
     }
+  }
 
-    // Specs (JSON in /spec)
-    draw("#vis-lollipop","spec/lollipop.json");
-    draw("#vis-diverge","spec/diverge.json");
-    draw("#vis-map","spec/au-pt-map.json");
-    draw("#vis-waffles","spec/waffles.json");
-    draw("#vis-pie","spec/pie.json");
-    draw("#vis-scatter","spec/scatter.json");
-    draw("#vis-infra","spec/infra-bars.json");
-    draw("#vis-vic-lines","spec/vic-lines.json");
-    draw("#vis-sa-stacked","spec/sa-stacked.json");
-    draw("#vis-sa-heat","spec/sa-heat.json");
+  const charts = [
+    ['vis-lollipop','spec/lollipop.json'],
+    ['vis-diverge','spec/diverge.json'],
+    ['vis-modes-pictogram','spec/modes-pictogram.json'], // SVG so we can adjust
+    ['vis-map','spec/au-pt-map.json'],
+    ['vis-scatter','spec/scatter.json'],
+    ['vis-vic-lines','spec/vic-lines.json'],
+    ['vis-sa-stacked','spec/sa-stacked.json'],
+    ['vis-sa-heat','spec/sa-heat.json']
+  ];
 
-    document.getElementById("updated").textContent =
-      new Date().toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
-  </script>
+  function renderAll(){
+    charts.forEach(([id,url]) => embedVL(id,url));
+    const ud = document.getElementById('updated-date');
+    if (ud) ud.textContent = new Date().toLocaleDateString('en-AU',{year:'numeric',month:'long',day:'numeric'});
+  }
+
+  // Re-apply centering on resize (SVG reflows)
+  let recenterTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(recenterTimer);
+    recenterTimer = setTimeout(() => {
+      const svg = document.querySelector('#vis-modes-pictogram svg');
+      if (svg) centerAllPictogramFacets(svg);
+    }, 120);
+  });
+
+  document.addEventListener('DOMContentLoaded', renderAll);
+</script>
+
+
 </body>
 </html>
