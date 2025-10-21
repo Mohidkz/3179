@@ -1,7 +1,6 @@
-The PT Line — An Australian Commuting Story (FIT3179 DV2)
+The PT Line — An Australian Commuting Story (FIT3-79 DV2)
 
 Author: Muhammad Mohid Khanzada
-
 Student ID: 33891095
 
 This project is an interactive data story exploring Australian public transport commuting and operational patterns, created using Vega-Lite. It serves as my Data Visualisation 2 submission and is on a distinctly different domain from my DV1 project.
@@ -44,6 +43,10 @@ Line Chart & Heatmap: These idioms are ideal for showing trends over time. The l
 
 100% Stacked Bar Chart: This is used to show the changing proportion of each transport mode's contribution to Adelaide's total usage over several months.
 
+Design Process
+
+The final design is the result of an iterative process documented in the Five Design Sheets (FDS). The narrative and chart selection evolved from an initial broad collection of visualisations into a more focused and cohesive story, framed by the "metro line" journey to guide the user.
+
 Design & Implementation Notes
 
 Web Performance: All data files have been optimised to keep the total download size under 1MB for a fast user experience.
@@ -62,4 +65,4 @@ GTFS Feeds: Sourced from VIC (DataVic), QLD (Translink), SA (data.sa.gov.au), WA
 
 Victorian Patronage: Vic DTP “Monthly public transport patronage by mode” CSV.
 
-Adelaide Validations 2021: Sourced from data
+Adelaide Validations 2021: Sourced from data.sa.gov.au under a CC BY licence.
