@@ -21,14 +21,6 @@
     { "filter": "datum.pct >= pct_threshold" },
     {
       "joinaggregate": [{ "op": "mean", "field": "pct", "as": "nat_avg" }]
-    },
-    {
-      "window": [{ "op": "rank", "as": "r_desc" }],
-      "sort": [{ "field": "pct", "order": "descending" }]
-    },
-    {
-      "window": [{ "op": "rank", "as": "r_asc" }],
-      "sort": [{ "field": "pct", "order": "ascending" }]
     }
   ],
   "encoding": {
@@ -71,22 +63,6 @@
           { "field": "pt_commuters", "title": "PT commuters", "format": "," },
           { "field": "total_commuters", "title": "Total commuters", "format": "," }
         ]
-      }
-    },
-    {
-      "transform": [{ "filter": "datum.r_desc==1" }],
-      "mark": { "type": "text", "dx": 8, "dy": -8, "fontSize": 12 },
-      "encoding": {
-        "x": { "field": "pct", "type": "quantitative" },
-        "text": { "field": "state_name" }
-      }
-    },
-    {
-      "transform": [{ "filter": "datum.r_asc==1" }],
-      "mark": { "type": "text", "dx": 8, "dy": 12, "fontSize": 12 },
-      "encoding": {
-        "x": { "field": "pct", "type": "quantitative" },
-        "text": { "field": "state_name" }
       }
     }
   ]

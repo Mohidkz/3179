@@ -20,7 +20,7 @@
   <style>
     
   /* ================================
-     Theme tokens (light & dark)
+      Theme tokens (light & dark)
   ==================================*/
   :root {
     /* Surfaces */
@@ -28,11 +28,11 @@
     --card-bg: #ffffff;
 
     /* Text */
-    --text-primary: #0f172a;        /* slate-900 */
-    --text-secondary: #334155;      /* slate-700 (stronger than before for contrast) */
+    --text-primary: #0f172a;       /* slate-900 */
+    --text-secondary: #334155;     /* slate-700 (stronger than before for contrast) */
 
     /* Lines / borders / shadows */
-    --border-color: #cbd5e1;        /* slate-300 */
+    --border-color: #cbd5e1;       /* slate-300 */
     --border-color-translucent: rgba(148, 163, 184, .35);
     --shadow-color: rgba(15, 23, 42, .08);
 
@@ -59,8 +59,8 @@
       --bg: #111317;
       --card-bg: #171a21;
 
-      --text-primary: #e6eef9;        /* near-White */
-      --text-secondary: #c6d0de;      /* lighter than before for legibility on dark */
+      --text-primary: #e6eef9;       /* near-White */
+      --text-secondary: #c6d0de;     /* lighter than before for legibility on dark */
 
       --border-color: #2a3240;
       --border-color-translucent: rgba(82, 94, 118, .45);
@@ -71,7 +71,7 @@
       --tram: #fdd663;
       --accent: #d2b3ff;
 
-      --link: #9ec5ff;                /* AA on #111317 */
+      --link: #9ec5ff;               /* AA on #111317 */
       --link-hover: #cfe3ff;
       --link-visited: #d3b3ff;
 
@@ -82,7 +82,7 @@
   }
 
   /* ================================
-     Base
+      Base
   ==================================*/
   *, *::before, *::after { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -111,9 +111,9 @@
   }
 
   /* ================================
-     Typography
+      Typography
   ==================================*/
-  h1, h2 {
+  h1, h2, h3 {
     font-weight: 700;
     line-height: 1.2;
     margin: 0;
@@ -133,6 +133,11 @@
     align-items: center;
     gap: 12px;
   }
+   h3 {
+    font-size: 1.1rem;
+    margin-top: 24px;
+    margin-bottom: 8px;
+  }
   h2 svg {
     width: 26px;
     height: 26px;
@@ -146,7 +151,7 @@
     max-width: 85ch;
     margin: 0 0 20px;
   }
-  p.body {
+  p.body, ul.body {
     color: var(--text-secondary);
     max-width: 90ch;
     margin: 8px 0 16px;
@@ -155,7 +160,7 @@
   header { margin-bottom: 24px; }
 
   /* ================================
-     Links (high-contrast + focus)
+      Links (high-contrast + focus)
   ==================================*/
   a, .body a, figcaption a {
     color: var(--link);
@@ -188,7 +193,7 @@
   }
 
   /* ================================
-     Cards / Stations
+      Cards / Stations
   ==================================*/
   .station {
     background: var(--card-bg);
@@ -202,7 +207,7 @@
   .station:hover { box-shadow: 0 12px 30px var(--shadow-color); }
 
   /* ================================
-     Metro line nav
+      Metro line nav
   ==================================*/
   .metro-line-nav {
     position: relative;
@@ -245,14 +250,14 @@
   .line-stop:nth-child(4) .stop-badge { background: var(--accent); box-shadow: 0 0 0 3px var(--accent); }
 
   /* ================================
-     Grid
+      Grid
   ==================================*/
   .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 26px; }
   .col-6 { grid-column: span 12; }
   @media (min-width: 900px) { .col-6 { grid-column: span 6; } }
 
   /* ================================
-     Figures & Visual containers
+      Figures & Visual containers
   ==================================*/
   figure { margin: 0; }
   .vis-container {
@@ -261,7 +266,7 @@
     border-radius: 10px;
     padding: 16px;
     background: var(--bg);
-    overflow: visible;        /* let legends/labels render fully */
+    overflow: visible;      /* let legends/labels render fully */
   }
   .vis-inner { width: 100%; }
 
@@ -289,7 +294,7 @@
   }
 
   /* ================================
-     Reduced motion
+      Reduced motion
   ==================================*/
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
@@ -302,7 +307,7 @@
     <header>
       <h1>The PT Line — An Australian Commuting Story</h1>
       <p class="lede">
-        A guided analysis of Australia’s public-transport commute. We begin with a national snapshot, examine where and what people ride, test whether access predicts use, and conclude with operational evidence from Victoria and Adelaide.
+        A guided analysis of Australia’s public transport landscape for the average Australian. We use 2021 Census data to see who leads the nation in commuting, then explore operational data from Victoria and South Australia to understand the real-world patterns behind the numbers.
       </p>
 
       <nav class="metro-line-nav" aria-label="Story stops">
@@ -318,19 +323,19 @@
     <section class="station" id="st1">
       <h2>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V5m8 14V5m8 14V5"/></svg>
-        <span>Station 1 — State of Play</span>
+        <span>Station 1 — State of Play: Who Leads and Who Lags?</span>
       </h2>
       <p class="body">
-        The Census reveals a pronounced split across states. Rail-anchored metros (NSW, VIC) sustain markedly higher commuting by public transport, while more dispersed states trail. The lollipop establishes the ranking; the diverging bars quantify deviation from the national average.
+        The 2021 Census data reveals a clear divide: states with major, rail-anchored cities like Sydney and Melbourne show significantly higher public transport use. The lollipop chart ranks each state, clearly identifying the leaders, while the diverging bar chart powerfully illustrates how far each state sits from the national average.
       </p>
       <div class="grid">
         <figure class="col-6">
           <div class="vis-container"><div id="vis-lollipop" class="vis-inner" aria-label="Lollipop ranking by % using public transport"></div></div>
-          <figcaption><span>Ranking by PT share underscores the dominance of NSW and Victoria relative to smaller, less rail-intensive states.</span><span class="chip">2021 Census</span></figcaption>
+          <figcaption><span>Ranking by PT share underscores the dominance of NSW and Victoria.</span><span class="chip">2021 Census</span></figcaption>
         </figure>
         <figure class="col-6">
           <div class="vis-container"><div id="vis-diverge" class="vis-inner" aria-label="Diverging bars relative to national average"></div></div>
-          <figcaption><span>Deviation from the national mean, in percentage points, makes over- and under-performance unambiguous.</span><span class="chip">vs. national mean</span></figcaption>
+          <figcaption><span>Deviation from the mean makes over- and under-performance unambiguous.</span><span class="chip">vs. national mean</span></figcaption>
         </figure>
       </div>
       <p class="body"><a href="#st2">Next stop: National Picture →</a></p>
@@ -340,19 +345,18 @@
     <section class="station" id="st2">
       <h2>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c1.657 0 3-1.567 3-3.5S13.657 4 12 4 9 5.567 9 7.5 10.343 11 12 11z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 20.5c0-2.761-3.358-5-7.5-5s-7.5 2.239-7.5 5"/></svg>
-        <span>Station 2 — The National Picture</span>
+        <span>Station 2 — The National Picture: What We Ride and Where</span>
       </h2>
       <p class="body">
-        <strong>Mode mix.</strong> Trains carry the largest share of commuters; buses extend coverage; trams offer targeted urban capacity. The pictogram converts proportions into ten filled tiles per mode for instant comprehension.<br>
-        <strong>Geography.</strong> Uptake concentrates along the south-east corridor—especially Sydney and Melbourne—where heavy rail is most extensive.
+        Nationally, trains form the backbone of commuting, carrying the largest share of passengers. Buses play a vital role in extending network reach, while trams serve dense urban corridors. This geographic pattern is clear on the map: usage is heavily concentrated in the south-eastern states, where extensive heavy rail infrastructure underpins the system.
       </p>
       <figure style="margin-bottom: 22px;">
         <div class="vis-container"><div id="vis-modes-pictogram" class="vis-inner" aria-label="Pictogram of national mode share"></div></div>
-        <figcaption><span>Ten-slot tiles summarise national mode proportions: trains dominate; buses are next; trams contribute a smaller but meaningful share.</span></figcaption>
+        <figcaption><span>Pictograms summarise national mode proportions: trains dominate, followed by buses.</span></figcaption>
       </figure>
       <figure>
         <div class="vis-container"><div id="vis-map" class="vis-inner" aria-label="Choropleth map: % using PT by state"></div></div>
-        <figcaption><span>Spatial concentration aligns with rail availability: higher PT share in NSW and VIC; lower levels elsewhere.</span></figcaption>
+        <figcaption><span>Spatial concentration aligns with rail availability, with higher usage in NSW and VIC.</span></figcaption>
       </figure>
       <p class="body"><a href="#st3">Next stop: Access vs Action →</a></p>
     </section>
@@ -361,14 +365,14 @@
     <section class="station" id="st3">
       <h2>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 17l6-6 4 4 7-7"/></svg>
-        <span>Station 3 — Access vs Action</span>
+        <span>Station 3 — Access vs. Action: Does More Infrastructure Mean More Riders?</span>
       </h2>
       <p class="body">
-        Infrastructure breadth correlates with usage: states with more stops and stations per capita tend to record higher PT shares. Outliers show that frequency, reliability and integration convert access into habitual commuting.
+        There appears to be a positive correlation: states with more stops and stations per capita tend to have higher PT usage. The scatter plot shows this upward trend. However, outliers like Tasmania—with high stop density but low ridership—reveal that infrastructure alone isn't enough. Service quality, frequency, and network integration are critical for converting access into action.
       </p>
       <figure>
         <div class="vis-container"><div id="vis-scatter" class="vis-inner" aria-label="Scatter: infrastructure density vs PT use"></div></div>
-        <figcaption><span>A positive association exists between access and uptake; deviations highlight where service quality or land-use patterns mediate outcomes.</span></figcaption>
+        <figcaption><span>A positive association exists, but outliers highlight that density isn't the only factor.</span></figcaption>
       </figure>
       <p class="body"><a href="#st4">Next stop: Operational Pulse →</a></p>
     </section>
@@ -377,23 +381,23 @@
     <section class="station" id="st4">
       <h2>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12h3l3 9 6-18 3 9h3"/></svg>
-        <span>Station 4 — Operational Pulse</span>
+        <span>Station 4 — Operational Pulse: A Tale of Two Cities</span>
       </h2>
       <p class="body">
-        Time-series and validations ground the snapshot in operation. In <strong>Victoria</strong>, monthly patronage shows the pandemic shock and uneven recovery across modes. In <strong>Adelaide</strong>, taps reveal a pronounced weekday rhythm, with buses shouldering the majority of trips.
+        Operational data brings the story to life. In <strong>Victoria</strong>, the line chart of monthly patronage vividly shows the dramatic shock of the COVID-19 pandemic and the slow, uneven recovery across different modes. In <strong>Adelaide</strong>, the data reveals a system heavily reliant on buses and a strong weekly commuting rhythm, with smartcard taps peaking from Monday to Friday.
       </p>
       <figure style="margin-bottom: 22px;">
         <div class="vis-container"><div id="vis-vic-lines" class="vis-inner" aria-label="Line chart: Victoria monthly patronage"></div></div>
-        <figcaption><span>Shock, stabilisation, gradual return: trajectories differ by mode, reflecting distinct roles in the network.</span></figcaption>
+        <figcaption><span>The pandemic shock and gradual recovery trajectories differ by mode.</span></figcaption>
       </figure>
       <div class="grid">
         <figure class="col-6">
           <div class="vis-container"><div id="vis-sa-stacked" class="vis-inner" aria-label="Stacked bars: Adelaide mode mix"></div></div>
-          <figcaption><span>Mode composition in early 2021 is bus-led, with rail and tram providing complementary capacity.</span></figcaption>
+          <figcaption><span>Adelaide's mode mix in early 2021 was heavily bus-led.</span></figcaption>
         </figure>
         <figure class="col-6">
           <div class="vis-container"><div id="vis-sa-heat" class="vis-inner" aria-label="Heatmap: Adelaide taps by weekday/week"></div></div>
-          <figcaption><span>Commuting cadence: strong Monday–Friday peaks with lighter weekends reflect work-oriented demand.</span></figcaption>
+          <figcaption><span>A strong Monday–Friday peak reflects work-oriented demand.</span></figcaption>
         </figure>
       </div>
       <p class="body"><a href="#st5">Final stop: Takeaways →</a></p>
@@ -406,18 +410,41 @@
         <span>Station 5 — Key Takeaways</span>
       </h2>
       <ul class="body" style="margin:6px 0 0 18px;padding-left:18px">
-        <li><strong>Rail-centred metros set the pace.</strong> NSW and Victoria convert metropolitan rail into materially higher PT commuting shares.</li>
-        <li><strong>Trains dominate, buses extend reach.</strong> The national mix reflects trunk capacity on rail with buses providing coverage.</li>
-        <li><strong>Access is a prerequisite; service makes it stick.</strong> Stop density aligns with uptake, but frequency, reliability, and integration are decisive.</li>
-        <li><strong>Operations validate the story.</strong> Time-series and tap patterns show shocks, recovery, and weekday cadence in practice.</li>
+        <li><strong>Rail-centred metros set the pace.</strong> States with large, established heavy rail networks (NSW, VIC) have a significant advantage in public transport commuting.</li>
+        <li><strong>Trains dominate, buses extend reach.</strong> Nationally, trains perform the heavy lifting for high-capacity corridors, while buses are essential for broader network coverage.</li>
+        <li><strong>Access is a prerequisite, but service is key.</strong> While having more stops correlates with higher usage, service quality—frequency, reliability, and integration—is what converts potential riders into regulars.</li>
+        <li><strong>Operational data validates the story.</strong> Real-world tap and patronage data confirms the high-level patterns seen in the Census, from weekday commuting rhythms to the long-term impacts of major events.</li>
       </ul>
-
-      <p class="body" style="margin-top:12px">
+       <p class="body" style="margin-top:24px;">
         <strong>Author:</strong> Muhammad Mohid Khanzada (ID: 33891095) &nbsp;•&nbsp;
         <strong>Last Updated:</strong> <time id="updated-date"></time>
       </p>
       <p class="body"><a href="#">↑ Back to top</a></p>
     </section>
+    
+    <!-- Data Sources Section -->
+    <section class="station" id="sources">
+       <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+        <span>Data Sources & Methodology</span>
+      </h2>
+      <p class="body">This visualisation combines several publicly available datasets to build a comprehensive picture of public transport in Australia. All data processing was performed to create clean, lightweight files suitable for web visualisation.</p>
+
+      <h3>Core National Data</h3>
+      <ul>
+        <li class="body"><strong>Commuting Patterns:</strong> Sourced from the <a href="https://www.abs.gov.au/census/find-census-data/datapacks" target="_blank">Australian Bureau of Statistics (ABS) 2021 Census of Population and Housing</a>, specifically the "Method of Travel to Work (MTWP)" dataset. This provides state-level percentages and national mode splits.</li>
+        <li class="body"><strong>Population Data:</strong> Estimated Resident Population (ERP) data from the ABS for December 2021 was used to calculate per-capita metrics.</li>
+         <li class="body"><strong>Geographic Data:</strong> State and territory boundaries were sourced from <a href="https://www.naturalearthdata.com/" target="_blank">Natural Earth</a> (Admin 1 level) and converted to TopoJSON format for use in the map.</li>
+      </ul>
+      
+      <h3>Infrastructure & Operational Data</h3>
+       <ul>
+        <li class="body"><strong>Infrastructure Density:</strong> Calculated from General Transit Feed Specification (GTFS) data published by state transit authorities (DataVic, Translink QLD, data.sa.gov.au, Transperth). Stops and parent stations were deduplicated to create a proxy for infrastructure availability per 100,000 residents.</li>
+        <li class="body"><strong>Victorian Patronage:</strong> Sourced from the Victorian Department of Transport and Planning's "Monthly public transport patronage by mode" CSV file, covering metropolitan train, tram, and bus services.</li>
+         <li class="body"><strong>Adelaide Validations:</strong> Sourced from <a href="https://data.sa.gov.au/data/dataset/adelaide-metrocard-validations" target="_blank">data.sa.gov.au</a>, using the "Banded Adelaide Metrocard Validations" datasets for all four quarters of 2021. These files were combined and processed to create the full 52-week heatmap data.</li>
+      </ul>
+    </section>
+    
   </div>
 
   <script>
@@ -532,3 +559,4 @@
 
 </body>
 </html>
+

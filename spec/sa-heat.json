@@ -1,41 +1,75 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "Adelaide taps heatmap with filters.",
+  "description": "Adelaide taps heatmap with interactive filters for week range, weekday, and color scale.",
   "width": "container",
   "height": 320,
   "data": { "url": "data/sa-weekday-heat.csv" },
   "params": [
     {
-      "name": "weekMax",
-      "value": 52,
-      "bind": { "input": "range", "min": 1, "max": 52, "step": 1, "name": "Up to week: " }
+      "name": "week_start",
+      "value": 1,
+      "bind": { "input": "range", "min": 1, "max": 52, "step": 1, "name": "Start Week: " }
+    },
+    {
+      "name": "week_end",
+      "value": 15,
+      "bind": { "input": "range", "min": 1, "max": 52, "step": 1, "name": "End Week: " }
     },
     {
       "name": "weekdayPick",
       "value": "All",
-      "bind": { "input": "select", "options": ["All","Mon","Tue","Wed","Thu","Fri","Sat","Sun"], "name": "Weekday: " }
+      "bind": {
+        "input": "select",
+        "options": ["All", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        "name": "Weekday: "
+      }
     },
     {
       "name": "zMax",
       "value": 200000,
-      "bind": { "input": "range", "min": 20000, "max": 300000, "step": 10000, "name": "Color cap: " }
+      "bind": {
+        "input": "range",
+        "min": 20000,
+        "max": 300000,
+        "step": 10000,
+        "name": "Color Scale Max: "
+      }
     }
   ],
   "transform": [
     { "calculate": "toNumber(datum.week)", "as": "week_num" },
     { "calculate": "toNumber(datum.dow)", "as": "dow_num" },
     { "calculate": "toNumber(datum.validations)", "as": "taps_num" },
-    { "filter": "datum.week_num <= weekMax" },
     {
-      "calculate": "datum.dow_num==0 ? 'Mon' : datum.dow_num==1 ? 'Tue' : datum.dow_num==2 ? 'Wed' : datum.dow_num==3 ? 'Thu' : datum.dow_num==4 ? 'Fri' : datum.dow_num==5 ? 'Sat' : 'Sun'",
+      "filter": "datum.week_num >= week_start && datum.week_num <= week_end"
+    },
+    {
+      "calculate": "['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][datum.dow_num - 1]",
       "as": "weekday"
     },
-    { "filter": "weekdayPick === 'All' || datum.weekday === weekdayPick" }
+    {
+      "filter": "weekdayPick === 'All' || datum.weekday === weekdayPick"
+    }
   ],
   "encoding": {
-    "x": { "field": "week_num", "type": "ordinal", "title": "Week" },
-    "y": { "field": "weekday", "type": "ordinal", "title": null, "sort": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] },
-    "color": { "field": "taps_num", "type": "quantitative", "title": "Taps", "scale": { "domain": [0, { "expr": "zMax" }] } },
+    "x": {
+      "field": "week_num",
+      "type": "ordinal",
+      "title": "Week of Year"
+    },
+    "y": {
+      "field": "weekday",
+      "type": "ordinal",
+      "title": null,
+      "sort": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    },
+    "color": {
+      "field": "taps_num",
+      "type": "quantitative",
+      "title": "Taps",
+      "scale": { "domain": [0, { "expr": "zMax" }], "scheme": "blues" },
+       "legend": { "format": "~s" }
+    },
     "tooltip": [
       { "field": "week_num", "title": "Week" },
       { "field": "weekday", "title": "Weekday" },
@@ -45,3 +79,4 @@
   "mark": { "type": "rect" },
   "config": { "view": { "stroke": null } }
 }
+
