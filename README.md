@@ -1,63 +1,56 @@
 The PT Line — An Australian Commuting Story (FIT3179 DV2)
 
 Author: Muhammad Mohid Khanzada
+
 Student ID: 33891095
 
 This project is an interactive data story exploring Australian public transport commuting and operational patterns, created using Vega-Lite. It serves as my Data Visualisation 2 submission and is on a distinctly different domain from my DV1 project.
 
 Project Narrative & Munzner's Framework
 
-The visualisation follows a narrative structure, taking the user from a high-level national overview down to specific operational details, framed as a journey along a metro line.
+The visualisation follows a narrative structure, taking the user on a themed journey along a metro line. Each "station" stops at a key part of the story, moving from a high-level national overview down to specific, real-world operational details.
 
-What (Data): The project synthesises multiple datasets to build a comprehensive picture.
+What (Data): The project synthesises multiple datasets to build a comprehensive picture:
 
-Commuting Patterns: ABS 2021 Census (Method of Travel to Work) data for state-level percentages and the national mode split.
+Commuting Patterns: ABS 2021 Census data provides the foundation with state-level percentages and the national mode split.
 
-Geography: Australian state boundaries from Natural Earth, simplified to TopoJSON format for web performance.
+Geography: Australian state boundaries from Natural Earth provide the geographic context for the map.
 
-Infrastructure Proxy: A derived dataset of public transport stop/station counts per state from publicly available GTFS feeds. This provides a proxy for infrastructure density when combined with ABS Estimated Resident Population (ERP) data.
+Infrastructure Proxy: We created a measure of infrastructure density by counting public transport stops/stations from official GTFS data and combining it with ABS population data.
 
-Operational Data (Victoria): Monthly patronage figures from Public Transport Victoria, showing trends over time.
+Operational Data: Real-world usage is shown through monthly patronage figures from Public Transport Victoria and anonymised smartcard validation data from Adelaide Metro for 2021.
 
-Operational Data (South Australia): Anonymised Metrocard validation counts for Q1 2021, revealing daily and weekly usage rhythms.
+Why (Tasks & Insights): The primary goal is to help an average Australian understand public transport usage patterns across the country. Key questions the user can answer include:
 
-Why (Tasks & Insights): The primary goal is to tell an engaging story that helps an average Australian understand public transport usage patterns across the country. Key tasks for the user include:
+Which states have the highest and lowest public transport uptake?
 
-Compare states to see which have higher or lower PT uptake.
+Where are most PT users located geographically?
 
-Identify geographic concentrations of PT usage.
+What are the most common modes of transport nationally?
 
-Understand the composition of the national PT network (i.e., which modes are most common).
+Is there a link between the amount of infrastructure and the number of riders?
 
-Explore the relationship between infrastructure density and actual ridership.
+How do real-world events (like a pandemic) or weekly rhythms (work vs. weekend) affect usage?
 
-Discover real-world usage patterns through operational data, such as the impact of the pandemic or typical weekday rhythms.
+How (Idioms & Rationale): A range of carefully selected Vega-Lite idioms are used to effectively tell the story:
 
-How (Idioms & Enhancements): A range of carefully selected Vega-Lite idioms are used to effectively encode the data.
+Lollipop & Diverging Bar Charts: Chosen to clearly rank states and powerfully visualise their deviation from the national average.
 
-Comparison: Lollipop and Diverging Bar Charts to rank states and show deviation from the mean.
+Choropleth Map: The most effective idiom for showing how a value (PT usage) is distributed across geographic regions.
 
-Geography: A Choropleth Map to show spatial distribution.
+Scatter Plot with Regression Line: Used to clearly investigate the relationship between two continuous variables: infrastructure density and ridership.
 
-Composition: A horizontal Bar Chart for a clear, accessible comparison of national mode share.
+Line Chart & Heatmap: These idioms are ideal for showing trends over time. The line chart tracks Victoria's post-pandemic recovery, while the heatmap reveals the strong weekly commuting rhythm in Adelaide.
 
-Relationship: A Scatter Plot with a regression line and annotated points to explore the link between infrastructure and uptake.
-
-Time-Series & Trends: A Multi-Series Line Chart for Victorian patronage and a Heatmap for Adelaide's weekly tap data.
-
-Part-to-Whole: A 100% Stacked Bar Chart to show the monthly mode mix in Adelaide.
-
-Annotations: Key charts are annotated directly to highlight significant data points (e.g., pandemic impact, outlier states), guiding the user towards insights.
+100% Stacked Bar Chart: This is used to show the changing proportion of each transport mode's contribution to Adelaide's total usage over several months.
 
 Design & Implementation Notes
 
-Web Performance: All data files have been optimised to keep the total download size under 1MB for a fast user experience. The au-states.json TopoJSON file is simplified, and CSVs contain only necessary columns.
+Web Performance: All data files have been optimised to keep the total download size under 1MB for a fast user experience.
 
-Accessibility & Theming: The design features a high-contrast colour palette that adapts to both light and dark system modes. The typography uses the 'Inter' font for excellent readability. Semantic colours are used consistently for different transport modes across the page and charts.
+Accessibility & Theming: The design features a high-contrast colour palette that adapts to both light and dark system modes. The typography uses the 'Inter' font for excellent readability.
 
-Live Page: The project is hosted on GitHub Pages. All Vega-Lite specifications are in the /spec directory and data is in /data. Each visualisation includes a button to view the underlying JSON spec.
-
-Design Process: The final design is the result of an iterative process documented in Five Design Sheets (FDS), which are available separately. The narrative evolved from a simple collection of charts to a cohesive, themed story.
+Live Page: The project is hosted on GitHub Pages. All Vega-Lite specifications are in the /spec directory and data is in /data.
 
 Data Sources & Licensing
 
@@ -69,4 +62,4 @@ GTFS Feeds: Sourced from VIC (DataVic), QLD (Translink), SA (data.sa.gov.au), WA
 
 Victorian Patronage: Vic DTP “Monthly public transport patronage by mode” CSV.
 
-Adelaide Validations 2021 Q1: CC BY licence.
+Adelaide Validations 2021: Sourced from data
