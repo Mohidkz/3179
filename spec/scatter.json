@@ -1,85 +1,105 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-  "description": "Access vs uptake: infra density vs % using PT (4 states, no UI filters).",
-  "width": "container",
-  "height": 400,
-
+  "description": "Full-width scatter plot showing relationship between public transport infrastructure density and % using PT across Australian states, with best-fit line.",
   "data": {
-    "url": "data/pt-infra-density.csv",
-    "format": {
-      "type": "csv",
-      "parse": {
-        "infra_per_100k": "number",
-        "total_stops_01": "number",
-        "erp_2021": "number"
-      }
-    }
+    "url": "data/pt-infra-density.csv"
   },
-
   "transform": [
     {
       "lookup": "state_name",
       "from": {
         "data": {
           "values": [
-            { "state_name": "Victoria",          "pt_share": 4.4 },
-            { "state_name": "Queensland",        "pt_share": 4.1 },
-            { "state_name": "South Australia",   "pt_share": 7.4 },
-            { "state_name": "Western Australia", "pt_share": 5.3 }
+            {"state_name": "Victoria", "pt_share": 4.4},
+            {"state_name": "Queensland", "pt_share": 4.1},
+            {"state_name": "South Australia", "pt_share": 7.4},
+            {"state_name": "Western Australia", "pt_share": 5.3}
           ]
         },
         "key": "state_name",
         "fields": ["pt_share"]
       }
     },
-
-    { "calculate": "toNumber(datum.infra_per_100k)", "as": "xval" },
-    { "calculate": "(isNumber(datum.pt_share) && datum.pt_share <= 1) ? datum.pt_share * 100 : datum.pt_share", "as": "yval" },
-    { "calculate": "datum.state_name", "as": "label" },
-
-    { "filter": "isNumber(datum.xval) && isFinite(datum.xval) && isNumber(datum.yval) && isFinite(datum.yval)" }
+    {
+      "calculate": "toNumber(datum.infra_per_100k)",
+      "as": "xval"
+    },
+    {
+      "calculate": "toNumber(datum.pt_share)",
+      "as": "yval"
+    },
+    {
+      "filter": "isValid(datum.xval) && isValid(datum.yval)"
+    }
   ],
-
-  "encoding": {
-    "x": {
-      "field": "xval",
-      "type": "quantitative",
-      "title": "PT stops/stations per 100,000 residents",
-      "axis": { "format": "d" }
-    },
-    "y": {
-      "field": "yval",
-      "type": "quantitative",
-      "title": "% using PT",
-      "axis": { "format": ".1f" }
-    },
-    "color": {
-      "field": "label",
-      "type": "nominal",
-      "legend": { "title": null }
-    },
-    "tooltip": [
-      { "field": "label", "title": "State" },
-      { "field": "xval", "title": "Stops/100k", "format": ".0f" },
-      { "field": "yval", "title": "% using PT", "format": ".1f" }
-    ]
-  },
-
+  "width": "container",       
+  "height": 350,               
   "layer": [
-    { "mark": { "type": "point", "filled": true, "size": 110 } },
+    {
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 200
+      },
+      "encoding": {
+        "x": {
+          "field": "xval",
+          "type": "quantitative",
+          "title": "Stops/Stations per 100,000 Residents",
+          "scale": {"domain": [200, 550]}
+        },
+        "y": {
+          "field": "yval",
+          "type": "quantitative",
+          "title": "% of People Using Public Transport",
+          "scale": {"domain": [3, 8]}
+        },
+        "color": {"field": "state_name", "type": "nominal", "title": "State"},
+        "tooltip": [
+          {"field": "state_name", "title": "State"},
+          {"field": "xval", "title": "Stops per 100k"},
+          {"field": "yval", "title": "% Using PT"}
+        ]
+      }
+    },
     {
       "mark": {
         "type": "text",
-        "dy": -10,
+        "dy": -15,
         "fontSize": 12,
-        "fontWeight": 700,
-        "align": "center",
-        "stroke": "#00000080",
+        "fontWeight": "bold"
+      },
+      "encoding": {
+        "text": {"field": "state_name"},
+        "x": {"field": "xval", "type": "quantitative"},
+        "y": {"field": "yval", "type": "quantitative"},
+        "color": {"field": "state_name", "type": "nominal"}
+      }
+    },
+    {
+      "transform": [
+        {"regression": "yval", "on": "xval"}
+      ],
+      "mark": {
+        "type": "line",
+        "color": "gray",
+        "strokeDash": [5, 5],
         "strokeWidth": 2
       },
-      "encoding": { "text": { "field": "label" } }
+      "encoding": {
+        "x": {"field": "xval", "type": "quantitative"},
+        "y": {"field": "yval", "type": "quantitative"}
+      }
     }
   ],
-
-  "config": { "view": { "stroke": null } }
+  "config": {
+    "background": "white",
+    "axis": {
+      "labelFont": "Arial",
+      "titleFont": "Arial",
+      "titleFontSize": 13,
+      "labelFontSize": 11
+    },
+    "legend": {"orient": "bottom"}
+  }
 }
