@@ -1,5 +1,6 @@
 {
   "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
+    "title": "Deviation from National Average",
   "width":"container","height":360,
   "data":{"url":"data/au-pt-commuting-2021.csv"},
   "transform":[

@@ -1,5 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  
   "description": "Mode share pictogram (centered facets with per-mode nudges).",
   "data": { "url": "data/au-pt-modes.csv" },
   "transform": [

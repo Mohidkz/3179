@@ -1,5 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Infrastructure Density vs. Commuter Uptake",
   "description": "Full-width scatter plot showing relationship between public transport infrastructure density and % using PT across Australian states, with best-fit line.",
   "data": {
     "url": "data/pt-infra-density.csv"

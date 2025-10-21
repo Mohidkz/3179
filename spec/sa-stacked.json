@@ -1,5 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Adelaide Mode Share by Month (Q1 2021)",
   "description": "Adelaide monthly mode mix with interactive filters.",
   "width": "container",
   "height": 462,

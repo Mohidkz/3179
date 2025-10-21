@@ -1,5 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Adelaide's Weekly Commuting Rhythm (2021)",
   "description": "Adelaide taps heatmap with interactive filters for week range, weekday, and color scale.",
   "width": "container",
   "height": 320,
